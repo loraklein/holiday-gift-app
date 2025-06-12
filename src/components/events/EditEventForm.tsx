@@ -14,8 +14,8 @@ export default function EditEventForm({ event, onSubmit, onCancel, isSubmitting 
     name: event.name || '',
     date: event.date ? new Date(event.date).toISOString().split('T')[0] : '',
     description: event.description || '',
-    event_type: (event as any).event_type || '',
-    recurring: (event as any).recurring !== undefined ? (event as any).recurring : true,
+    event_type: event.event_type || '',
+    recurring: event.recurring !== undefined ? event.recurring : true,
   });
 
   const handleSubmit = (e: React.FormEvent) => {

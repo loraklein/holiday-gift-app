@@ -55,7 +55,8 @@ export default function EventDetailPage() {
     return (
       <div className="p-8 text-center text-red-600">
         <h2 className="text-xl font-semibold mb-2">Event not found</h2>
-        <p>Sorry, we couldn't find that event.</p>
+        <p>Sorry, we couldn&apos;t find that event.</p>
+        <Link href="/events" className="text-blue-600 hover:underline mt-4 block">&larr; Back to Events</Link>
       </div>
     );
   }

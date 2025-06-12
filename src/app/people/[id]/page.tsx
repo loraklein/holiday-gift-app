@@ -18,7 +18,7 @@ export default function PersonDetailPage() {
     return (
       <div className="p-8 text-center text-red-600">
         <h2 className="text-xl font-semibold mb-2">Person not found</h2>
-        <p>Sorry, we couldn't find that person.</p>
+        <p>Sorry, we couldn&apos;t find that person.</p>
         <Link href="/people" className="text-blue-600 hover:underline mt-4 block">&larr; Back to People</Link>
       </div>
     );

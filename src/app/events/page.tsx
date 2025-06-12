@@ -42,9 +42,7 @@ export default function EventsPage() {
     }));
 
   // Combine real events and birthday events
-  const allEvents: Event[] = [...events, ...birthdayEvents];
-
-  const today = new Date();
+  const allEvents = useMemo(() => [...events, ...birthdayEvents], [events, birthdayEvents]);
 
   function getNextOccurrence(dateStr: string, recurring: boolean) {
     if (!dateStr) return new Date(8640000000000000); // far future for invalid dates
@@ -78,9 +76,8 @@ export default function EventsPage() {
         event.description?.toLowerCase().includes(query)
       );
     }
-    // Only show non-recurring events if their date is in the future
+    // Skip events with invalid or empty dates
     result = result.filter(event => {
-      // Skip events with invalid or empty dates
       if (!event.date || isNaN(new Date(event.date).getTime())) {
         return false;
       }
@@ -89,9 +86,8 @@ export default function EventsPage() {
       }
       if (event.recurring === false) {
         const eventDate = new Date(event.date);
-        const today = new Date();
-        eventDate.setFullYear(today.getFullYear());
-        return eventDate >= new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        eventDate.setFullYear(new Date().getFullYear());
+        return eventDate >= new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
       }
       return true;
     });
