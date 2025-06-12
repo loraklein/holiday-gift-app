@@ -150,7 +150,6 @@ export default function EventsPage() {
     return (
       <div className="space-y-6">
         <EventsPageHeader
-          totalCount={0}
           onAddClick={() => setShowAddForm(true)}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -177,7 +176,6 @@ export default function EventsPage() {
   return (
     <div className="space-y-6">
       <EventsPageHeader
-        totalCount={events.length}
         onAddClick={() => setShowAddForm(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

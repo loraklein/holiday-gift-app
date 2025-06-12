@@ -1,14 +1,12 @@
 import { Plus, Search } from 'lucide-react';
 
 interface PeoplePageHeaderProps {
-  totalCount: number;
   onAddClick: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
 
 export default function PeoplePageHeader({ 
-  totalCount, 
   onAddClick, 
   searchQuery, 
   onSearchChange 
@@ -18,9 +16,6 @@ export default function PeoplePageHeader({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">People</h1>
-          <p className="text-gray-600 mt-1">
-            Manage your {totalCount} {totalCount === 1 ? 'person' : 'people'}
-          </p>
         </div>
         <button
           onClick={onAddClick}

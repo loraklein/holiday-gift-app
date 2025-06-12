@@ -86,7 +86,6 @@ export default function PeoplePage() {
     return (
       <div className="space-y-6">
         <PeoplePageHeader 
-          totalCount={0}
           onAddClick={() => setShowAddForm(true)}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -113,7 +112,6 @@ export default function PeoplePage() {
   return (
     <div className="space-y-6">
       <PeoplePageHeader 
-        totalCount={people.length}
         onAddClick={() => setShowAddForm(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
