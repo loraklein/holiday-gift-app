@@ -139,19 +139,20 @@ class ApiClient {
 
   // Events endpoints
   async getEvents(): Promise<Event[]> {
-    const response = await this.get<{ events: any[] }>("/events");
+    type RawEvent = Omit<Event, 'date'> & { event_date: string };
+    const response = await this.get<{ events: RawEvent[] }>("/events");
     return response.events.map(event => ({
       ...event,
-      date: event.event_date, // map event_date to date
+      date: event.event_date,
     }));
   }
 
   async getEvent(id: number): Promise<Event> {
-    const response = await this.get<{ event: any }>(`/events/${id}`);
+    const response = await this.get<{ event: RawEvent }>(`/events/${id}`);
     const event = response.event;
     return {
       ...event,
-      date: event.event_date, // map event_date to date
+    date: event.event_date, // map event_date to date
     };
   }
 
