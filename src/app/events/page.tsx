@@ -103,7 +103,13 @@ export default function EventsPage() {
     eventData: Omit<Event, "id" | "created_at" | "updated_at">
   ) => {
     try {
-      await createEventMutation.mutateAsync(eventData);
+      const { date, ...rest } = eventData;
+      const apiData = {
+        ...rest,
+        event_date: date,
+      };
+  
+      await createEventMutation.mutateAsync(apiData);
       setShowAddForm(false);
       toast.success(`${eventData.name} added successfully!`);
     } catch (error) {
@@ -118,7 +124,14 @@ export default function EventsPage() {
 
   const handleUpdateEvent = async (id: number, eventData: Partial<Event>) => {
     try {
-      await updateEventMutation.mutateAsync({ id, ...eventData });
+      const { date, ...rest } = eventData;
+      const apiData = {
+        id,
+        ...rest,
+        ...(date !== undefined ? { event_date: date } : {}),
+      };
+  
+      await updateEventMutation.mutateAsync(apiData);
       setEventToEdit(null);
       toast.success("Event updated successfully!");
     } catch (error) {
