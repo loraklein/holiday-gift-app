@@ -7,6 +7,7 @@ export interface Person {
   name: string;
   email?: string;
   relationship?: string;
+  birthday?: string;
   notes?: string;
   created_at: string;
   updated_at: string;
