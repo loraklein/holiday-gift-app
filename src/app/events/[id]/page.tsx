@@ -1,11 +1,11 @@
 "use client";
-
+import { Event } from "@/lib/api";
 import { useParams } from "next/navigation";
 import { useEvent } from "@/hooks/useApi";
 import { Calendar, Cake, PartyPopper, Heart, Smile, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
-function getEventTypeIcon(event) {
+function getEventTypeIcon(event: Partial<Event> & { isBirthday?: boolean }) {
   if (event.isBirthday) return <Cake size={20} className="text-pink-500" />;
   switch (event.event_type) {
     case "holiday":
