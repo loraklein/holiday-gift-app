@@ -27,6 +27,10 @@ export default function EventDetailPage() {
   // Handle birthday events
   const isBirthday = typeof idParam === 'string' && idParam.startsWith('birthday-');
   
+  // Always call hooks at the top level
+  const id = Number(idParam);
+  const { data: event, isLoading, error } = useEvent(isBirthday ? 0 : id);
+  
   if (isBirthday) {
     // Extract personId from idParam
     const personId = idParam.replace('birthday-', '');
@@ -50,10 +54,6 @@ export default function EventDetailPage() {
       </div>
     );
   }
-
-  // Handle regular events
-  const id = Number(idParam);
-  const { data: event, isLoading, error } = useEvent(id);
 
   if (isLoading) {
     return (
