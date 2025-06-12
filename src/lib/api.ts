@@ -17,6 +17,8 @@ export interface Event {
   name: string;
   date: string;
   description?: string;
+  event_type?: string;
+  recurring?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -137,11 +139,20 @@ class ApiClient {
 
   // Events endpoints
   async getEvents(): Promise<Event[]> {
-    return this.get<Event[]>('/events');
+    const response = await this.get<{ events: any[] }>("/events");
+    return response.events.map(event => ({
+      ...event,
+      date: event.event_date, // map event_date to date
+    }));
   }
 
   async getEvent(id: number): Promise<Event> {
-    return this.get<Event>(`/events/${id}`);
+    const response = await this.get<{ event: any }>(`/events/${id}`);
+    const event = response.event;
+    return {
+      ...event,
+      date: event.event_date, // map event_date to date
+    };
   }
 
   async createEvent(event: Omit<Event, 'id' | 'created_at' | 'updated_at'>): Promise<Event> {
@@ -149,7 +160,8 @@ class ApiClient {
   }
 
   async updateEvent(id: number, event: Partial<Event>): Promise<Event> {
-    return this.put<Event>(`/events/${id}`, event);
+    const response = await this.patch<{message: string, event: Event}>(`/events/${id}`, event);
+    return response.event; // Extract the event from the wrapper
   }
 
   async deleteEvent(id: number): Promise<void> {
