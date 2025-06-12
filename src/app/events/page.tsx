@@ -149,13 +149,13 @@ export default function EventsPage() {
     }
   };
 
-  const handleEditEvent = (event: Event) => {
+  const handleEditEvent = (event: ExtendedEvent) => {
     // Don't allow editing birthday events
     if (typeof event.id === 'string' && event.id.startsWith('birthday-')) {
       toast.error("Birthday events cannot be edited directly. Edit the person's birthday instead.");
       return;
     }
-    setEventToEdit(event);
+    setEventToEdit(event as Event);
   };
 
   const handleUpdateEvent = async (id: number, eventData: Partial<Event>) => {
