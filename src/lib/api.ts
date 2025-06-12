@@ -1,3 +1,4 @@
+// API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 // Types for our API responses
@@ -6,7 +7,6 @@ export interface Person {
   name: string;
   email?: string;
   relationship?: string;
-  birthday?: string;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -15,12 +15,12 @@ export interface Person {
 export interface Event {
   id: number;
   name: string;
-  date: string;
+  event_date: string;  // Changed from 'date' to match your database
   description?: string;
   event_type?: string;
   recurring?: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface GiftIdea {
@@ -139,34 +139,27 @@ class ApiClient {
 
   // Events endpoints
   async getEvents(): Promise<Event[]> {
-    type RawEvent = Omit<Event, 'date'> & { event_date: string };
-    const response = await this.get<{ events: RawEvent[] }>("/events");
-    return response.events.map(event => ({
-      ...event,
-      date: event.event_date,
-    }));
+    const response = await this.get<{message: string, events: Event[]}>('/events');
+    return response.events;
   }
 
   async getEvent(id: number): Promise<Event> {
-    const response = await this.get<{ event: RawEvent }>(`/events/${id}`);
-    const event = response.event;
-    return {
-      ...event,
-    date: event.event_date, // map event_date to date
-    };
+    const response = await this.get<{message: string, event: Event}>(`/events/${id}`);
+    return response.event;
   }
 
   async createEvent(event: Omit<Event, 'id' | 'created_at' | 'updated_at'>): Promise<Event> {
-    return this.post<Event>('/events', event);
+    const response = await this.post<{message: string, event: Event}>('/events', event);
+    return response.event;
   }
 
   async updateEvent(id: number, event: Partial<Event>): Promise<Event> {
     const response = await this.patch<{message: string, event: Event}>(`/events/${id}`, event);
-    return response.event; // Extract the event from the wrapper
+    return response.event;
   }
 
   async deleteEvent(id: number): Promise<void> {
-    return this.delete<void>(`/events/${id}`);
+    await this.delete(`/events/${id}`);
   }
 
   // Gift Ideas endpoints
@@ -205,6 +198,7 @@ class ApiClient {
   }
 }
 
+// Create and export the API client instance
 export const api = new ApiClient(API_BASE_URL);
 
 // Export the client class for testing

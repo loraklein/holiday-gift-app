@@ -16,6 +16,9 @@ import AddEventForm from "@/components/events/AddEventForm";
 import EditEventForm from "@/components/events/EditEventForm";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
+// Extended Event type to handle birthday events
+type ExtendedEvent = Event | (Omit<Event, 'id'> & { id: string; isBirthday?: boolean });
+
 export default function EventsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
@@ -30,45 +33,59 @@ export default function EventsPage() {
   const deleteEventMutation = useDeleteEvent();
 
   // Transform people with birthdays into event-like objects
-  const birthdayEvents: Event[] = people
+  const birthdayEvents: ExtendedEvent[] = people
     .filter(person => person.birthday)
     .map(person => ({
-      id: `birthday-${person.id}` as unknown as number, // force type for compatibility
+      id: `birthday-${person.id}`,
       name: `${person.name}'s Birthday`,
-      date: person.birthday || '',
+      event_date: person.birthday || '',
       description: person.notes || "Birthday",
-      created_at: '', // or use person.created_at if available
-      updated_at: '', // or use person.updated_at if available
+      event_type: 'birthday',
+      recurring: true,
+      isBirthday: true,
+      created_at: person.created_at || '',
+      updated_at: person.updated_at || '',
     }));
 
   // Combine real events and birthday events
-  const allEvents = useMemo(() => [...events, ...birthdayEvents], [events, birthdayEvents]);
+  const allEvents: ExtendedEvent[] = useMemo(() => [...events, ...birthdayEvents], [events, birthdayEvents]);
 
-  function getNextOccurrence(dateStr: string, recurring: boolean) {
+  function getNextOccurrence(dateStr: string, recurring: boolean = true) {
     if (!dateStr) return new Date(8640000000000000); // far future for invalid dates
-    const date = new Date(dateStr);
-    const today = new Date();
-    const thisYear = today.getFullYear();
-    let next = new Date(date);
-    next.setFullYear(thisYear);
-    // If the event already happened this year, set to next year (only if recurring)
-    if (
-      next.getMonth() < today.getMonth() ||
-      (next.getMonth() === today.getMonth() && next.getDate() < today.getDate())
-    ) {
-      if (recurring) {
-        next.setFullYear(thisYear + 1);
-      } else {
-        // For non-recurring, set to far future so it sorts last and can be filtered out
-        next = new Date(8640000000000000);
+    
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        return new Date(8640000000000000); // far future for invalid dates
       }
+      
+      const today = new Date();
+      const thisYear = today.getFullYear();
+      let next = new Date(date);
+      next.setFullYear(thisYear);
+      
+      // If the event already happened this year, set to next year (only if recurring)
+      if (
+        next.getMonth() < today.getMonth() ||
+        (next.getMonth() === today.getMonth() && next.getDate() < today.getDate())
+      ) {
+        if (recurring) {
+          next.setFullYear(thisYear + 1);
+        } else {
+          // For non-recurring, set to far future so it sorts last and can be filtered out
+          next = new Date(8640000000000000);
+        }
+      }
+      return next;
+    } catch {
+      return new Date(8640000000000000); // far future for invalid dates
     }
-    return next;
   }
 
   // Filter and sort events based on search query and next occurrence
   const filteredEvents = useMemo(() => {
     let result = allEvents;
+    
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(event =>
@@ -76,25 +93,45 @@ export default function EventsPage() {
         event.description?.toLowerCase().includes(query)
       );
     }
+    
     // Skip events with invalid or empty dates
     result = result.filter(event => {
-      if (!event.date || isNaN(new Date(event.date).getTime())) {
+      if (!event.event_date) return false;
+      
+      try {
+        const testDate = new Date(event.event_date);
+        if (isNaN(testDate.getTime())) return false;
+      } catch {
         return false;
       }
-      if (typeof event.id === 'string' && String(event.id).startsWith('birthday-')) {
-        return true; // birthdays are always recurring
+      
+      // Handle birthday events (always recurring)
+      if (typeof event.id === 'string' && event.id.startsWith('birthday-')) {
+        return true;
       }
+      
+      // Handle non-recurring events - only show if they haven't passed
       if (event.recurring === false) {
-        const eventDate = new Date(event.date);
-        eventDate.setFullYear(new Date().getFullYear());
-        return eventDate >= new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+        const eventDate = new Date(event.event_date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate >= today;
       }
+      
       return true;
     });
+    
     // Sort by next occurrence
     return result.slice().sort((a, b) => {
-      const aNext = getNextOccurrence(a.date, (typeof a.id === 'string' && String(a.id).startsWith('birthday-')) || a.recurring !== false);
-      const bNext = getNextOccurrence(b.date, (typeof b.id === 'string' && String(b.id).startsWith('birthday-')) || b.recurring !== false);
+      const aIsBirthday = typeof a.id === 'string' && a.id.startsWith('birthday-');
+      const bIsBirthday = typeof b.id === 'string' && b.id.startsWith('birthday-');
+      const aRecurring = aIsBirthday || a.recurring !== false;
+      const bRecurring = bIsBirthday || b.recurring !== false;
+      
+      const aNext = getNextOccurrence(a.event_date, aRecurring);
+      const bNext = getNextOccurrence(b.event_date, bRecurring);
+      
       return aNext.getTime() - bNext.getTime();
     });
   }, [allEvents, searchQuery]);
@@ -103,13 +140,7 @@ export default function EventsPage() {
     eventData: Omit<Event, "id" | "created_at" | "updated_at">
   ) => {
     try {
-      const { date, ...rest } = eventData;
-      const apiData = {
-        ...rest,
-        event_date: date,
-      };
-  
-      await createEventMutation.mutateAsync(apiData);
+      await createEventMutation.mutateAsync(eventData);
       setShowAddForm(false);
       toast.success(`${eventData.name} added successfully!`);
     } catch (error) {
@@ -119,19 +150,17 @@ export default function EventsPage() {
   };
 
   const handleEditEvent = (event: Event) => {
+    // Don't allow editing birthday events
+    if (typeof event.id === 'string' && event.id.startsWith('birthday-')) {
+      toast.error("Birthday events cannot be edited directly. Edit the person's birthday instead.");
+      return;
+    }
     setEventToEdit(event);
   };
 
   const handleUpdateEvent = async (id: number, eventData: Partial<Event>) => {
     try {
-      const { date, ...rest } = eventData;
-      const apiData = {
-        id,
-        ...rest,
-        ...(date !== undefined ? { event_date: date } : {}),
-      };
-  
-      await updateEventMutation.mutateAsync(apiData);
+      await updateEventMutation.mutateAsync({ id, ...eventData });
       setEventToEdit(null);
       toast.success("Event updated successfully!");
     } catch (error) {
@@ -140,7 +169,13 @@ export default function EventsPage() {
     }
   };
 
-  const handleDeleteEvent = (id: number) => {
+  const handleDeleteEvent = (id: number | string) => {
+    // Don't allow deleting birthday events
+    if (typeof id === 'string' && id.startsWith('birthday-')) {
+      toast.error("Birthday events cannot be deleted. Remove the person's birthday instead.");
+      return;
+    }
+    
     const event = events.find((e) => e.id === id);
     if (!event) return;
     setEventToDelete(event);
@@ -195,7 +230,7 @@ export default function EventsPage() {
       />
 
       <EventsList
-        events={filteredEvents}
+        events={filteredEvents as Event[]}
         onEdit={handleEditEvent}
         onDelete={handleDeleteEvent}
         isLoading={isLoading}
@@ -231,4 +266,4 @@ export default function EventsPage() {
       />
     </div>
   );
-} 
+}

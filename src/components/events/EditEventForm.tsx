@@ -12,7 +12,7 @@ interface EditEventFormProps {
 export default function EditEventForm({ event, onSubmit, onCancel, isSubmitting }: EditEventFormProps) {
   const [formData, setFormData] = useState({
     name: event.name || '',
-    date: event.date ? new Date(event.date).toISOString().split('T')[0] : '',
+    date: event.event_date ? new Date(event.event_date).toISOString().split('T')[0] : '',
     description: event.description || '',
     event_type: event.event_type || '',
     recurring: event.recurring !== undefined ? event.recurring : true,

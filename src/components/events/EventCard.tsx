@@ -27,8 +27,8 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
   const isBirthday = typeof event.id === 'string' && String(event.id).startsWith('birthday-');
 
   const displayDate = isBirthday
-    ? new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
-    : new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    ? new Date(event.event_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+    : new Date(event.event_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
     <Card className="hover:shadow-md transition-shadow">

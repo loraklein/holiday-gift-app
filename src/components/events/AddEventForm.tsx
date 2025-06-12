@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { Event } from '@/lib/api';
 
 interface AddEventFormProps {
-  onSubmit: (event: Omit<Event, 'id' | 'created_at' | 'updated_at'> & { event_type: string; recurring: boolean }) => void;
+  onSubmit: (event: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
