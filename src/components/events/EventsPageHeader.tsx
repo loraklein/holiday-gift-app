@@ -15,7 +15,8 @@ export default function EventsPageHeader({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Events</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Events</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">Manage holidays and special occasions</p>
         </div>
         <button
           onClick={onAddClick}
@@ -33,7 +34,7 @@ export default function EventsPageHeader({
           placeholder="Search events..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         />
       </div>
     </div>

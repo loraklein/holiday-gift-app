@@ -30,8 +30,8 @@ export default function GiftIdeasPageHeader({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gift Ideas</h1>
-          <p className="text-gray-600 mt-1">Track and manage gift ideas</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gift Ideas</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">Track and manage gift ideas</p>
         </div>
         <button
           onClick={onAddClick}
@@ -51,7 +51,7 @@ export default function GiftIdeasPageHeader({
             placeholder="Search gift ideas..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           />
         </div>
 
@@ -62,7 +62,7 @@ export default function GiftIdeasPageHeader({
             <select
               value={statusFilter}
               onChange={(e) => onStatusFilterChange(e.target.value)}
-              className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white"
             >
               <option value="all">All Status</option>
               <option value="idea">💡 Ideas</option>
@@ -77,11 +77,11 @@ export default function GiftIdeasPageHeader({
             <select
               value={personFilter}
               onChange={(e) => onPersonFilterChange(e.target.value)}
-              className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white"
             >
-              <option value="all">All People</option>
+              <option value="">All People</option>
               {people.map((person) => (
-                <option key={person.id} value={person.id.toString()}>
+                <option key={person.id} value={person.id}>
                   {person.name}
                 </option>
               ))}
@@ -89,14 +89,13 @@ export default function GiftIdeasPageHeader({
             <Filter size={16} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
 
-          {/* Clear All Filters Button */}
           {hasActiveFilters && (
             <button
               onClick={onClearFilters}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors whitespace-nowrap"
+              className="flex items-center px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             >
-              <X size={16} />
-              Clear All
+              <X size={16} className="mr-1" />
+              Clear Filters
             </button>
           )}
         </div>
