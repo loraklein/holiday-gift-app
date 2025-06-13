@@ -12,6 +12,43 @@ export default function StatsGrid() {
   // Count people with birthdays
   const peopleWithBirthdays = people.filter(person => person.birthday).length;
 
+  // Count upcoming events (within next 6 months)
+  const upcomingEvents = events.filter(event => {
+    if (!event.event_date) return false;
+    
+    try {
+      const eventDate = new Date(event.event_date);
+      if (isNaN(eventDate.getTime())) return false;
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      eventDate.setHours(0, 0, 0, 0);
+      
+      // Calculate 6 months from today
+      const sixMonthsFromNow = new Date(today);
+      sixMonthsFromNow.setMonth(today.getMonth() + 6);
+      
+      // For recurring events, check if next occurrence is within 6 months
+      if (event.recurring !== false) {
+        const thisYear = today.getFullYear();
+        let next = new Date(eventDate);
+        next.setFullYear(thisYear);
+        
+        // If the event already happened this year, check next year
+        if (next < today) {
+          next.setFullYear(thisYear + 1);
+        }
+        
+        return next >= today && next <= sixMonthsFromNow;
+      }
+      
+      // For non-recurring events, check if they're within next 6 months
+      return eventDate >= today && eventDate <= sixMonthsFromNow;
+    } catch {
+      return false;
+    }
+  });
+
   const displayStats = [
     {
       label: "People",
@@ -21,8 +58,8 @@ export default function StatsGrid() {
       color: "blue" as const,
     },
     {
-      label: "Events",
-      value: events.length,
+      label: "Upcoming Events",
+      value: upcomingEvents.length,
       icon: Calendar,
       href: "/events",
       color: "green" as const,

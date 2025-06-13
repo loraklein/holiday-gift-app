@@ -40,6 +40,28 @@ export default function AddGiftIdeaForm({
     url: ''
   });
 
+  // Filter out invalid or past events
+  const validEvents = events.filter(event => {
+    if (!event.event_date) return false;
+    
+    try {
+      const eventDate = new Date(event.event_date);
+      if (isNaN(eventDate.getTime())) return false;
+      
+      // For non-recurring events, only show if they haven't passed
+      if (event.recurring === false) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate >= today;
+      }
+      
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
   useEffect(() => {
     if (initialPersonId) {
       setFormData(prev => ({ ...prev, person_id: initialPersonId.toString() }));
@@ -134,7 +156,7 @@ export default function AddGiftIdeaForm({
               disabled={isSubmitting}
             >
               <option value="">Select event</option>
-              {events.map(event => (
+              {validEvents.map(event => (
                 <option key={event.id} value={event.id}>
                   {event.name}
                 </option>

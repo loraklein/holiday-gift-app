@@ -20,6 +20,7 @@ export default function EventsPage() {
   const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
+  const [showPastEvents, setShowPastEvents] = useState(false);
 
   // API hooks
   const { data: events = [], isLoading, error } = useEvents();
@@ -82,25 +83,42 @@ export default function EventsPage() {
         return false;
       }
       
-      // Handle non-recurring events - only show if they haven't passed
-      if (event.recurring === false) {
-        const eventDate = new Date(event.event_date);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        eventDate.setHours(0, 0, 0, 0);
-        return eventDate >= today;
+      const eventDate = new Date(event.event_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      eventDate.setHours(0, 0, 0, 0);
+      
+      // Calculate 6 months from today
+      const sixMonthsFromNow = new Date(today);
+      sixMonthsFromNow.setMonth(today.getMonth() + 6);
+      
+      // For recurring events, determine if they're upcoming or past based on next occurrence
+      if (event.recurring !== false) {
+        const nextOccurrence = getNextOccurrence(event.event_date, true);
+        if (showPastEvents) {
+          // For past events view, show recurring events that have already occurred
+          return nextOccurrence < today;
+        } else {
+          // For upcoming events view, show recurring events within next 6 months
+          return nextOccurrence >= today && nextOccurrence <= sixMonthsFromNow;
+        }
       }
       
-      return true;
+      // For non-recurring events, check if they're within the next 6 months
+      if (showPastEvents) {
+        return eventDate < today;
+      } else {
+        return eventDate >= today && eventDate <= sixMonthsFromNow;
+      }
     });
     
     // Sort by next occurrence
     return result.slice().sort((a, b) => {
       const aNext = getNextOccurrence(a.event_date, a.recurring !== false);
       const bNext = getNextOccurrence(b.event_date, b.recurring !== false);
-      return aNext.getTime() - bNext.getTime();
+      return showPastEvents ? bNext.getTime() - aNext.getTime() : aNext.getTime() - bNext.getTime();
     });
-  }, [events, searchQuery]);
+  }, [events, searchQuery, showPastEvents]);
 
   const handleAddEvent = async (
     eventData: Omit<Event, "id" | "created_at" | "updated_at">
@@ -156,6 +174,8 @@ export default function EventsPage() {
           onAddClick={() => setShowAddForm(true)}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          showPastEvents={showPastEvents}
+          onTogglePastEvents={() => setShowPastEvents(!showPastEvents)}
         />
         <div className="text-center py-12">
           <div className="text-red-600 mb-4">
@@ -182,6 +202,8 @@ export default function EventsPage() {
         onAddClick={() => setShowAddForm(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        showPastEvents={showPastEvents}
+        onTogglePastEvents={() => setShowPastEvents(!showPastEvents)}
       />
 
       <EventsList

@@ -30,6 +30,31 @@ export default function EditGiftIdeaForm({ giftIdea, onClose }: EditGiftIdeaForm
   const { data: events = [] } = useEvents();
   const updateGiftIdeaMutation = useUpdateGiftIdea();
 
+  // Filter out invalid or past events, but include the current event if it exists
+  const validEvents = events.filter(event => {
+    // Always include the current event if it exists
+    if (event.id === giftIdea.event_id) return true;
+    
+    if (!event.event_date) return false;
+    
+    try {
+      const eventDate = new Date(event.event_date);
+      if (isNaN(eventDate.getTime())) return false;
+      
+      // For non-recurring events, only show if they haven't passed
+      if (event.recurring === false) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate >= today;
+      }
+      
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -116,7 +141,7 @@ export default function EditGiftIdeaForm({ giftIdea, onClose }: EditGiftIdeaForm
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               >
                 <option value="">Select an event (optional)</option>
-                {events.map(event => (
+                {validEvents.map(event => (
                   <option key={event.id} value={event.id}>
                     {event.name}
                   </option>
