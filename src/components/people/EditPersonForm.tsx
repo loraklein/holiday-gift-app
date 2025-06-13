@@ -29,7 +29,12 @@ export default function EditPersonForm({
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    await onSubmit(formData);
+    // Convert empty string to undefined for birthday
+    const submitData = {
+      ...formData,
+      birthday: formData.birthday || undefined,
+    };
+    await onSubmit(submitData);
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

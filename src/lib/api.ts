@@ -133,8 +133,13 @@ class ApiClient {
   }
 
   async updatePerson(id: number, person: Partial<Person>): Promise<Person> {
-    const response = await this.patch<{message: string, person: Person}>(`/people/${id}`, person);
-    return response.person; // Extract the person from the wrapper
+    try {
+      const response = await this.patch<{message: string, person: Person}>(`/people/${id}`, person);
+      return response.person; // Extract the person from the wrapper
+    } catch (error) {
+      console.error('Error updating person:', error);
+      throw error;
+    }
   }
 
   async deletePerson(id: number): Promise<void> {

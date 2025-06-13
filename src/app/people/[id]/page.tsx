@@ -22,13 +22,17 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Unwrap the params promise
   const { id } = use(params);
   console.log('Person ID:', id);
 
   // API hooks
-  const { data: person, isLoading, error } = usePerson(parseInt(id));
+  const { data: person, isLoading, error } = usePerson(parseInt(id), {
+    enabled: !isDeleting && !isUpdating // Disable the query when deletion or update is in progress
+  });
   const { data: giftIdeas = [], isLoading: isLoadingGiftIdeas } = useGiftIdeasByPerson(parseInt(id));
   
   console.log('Person data:', person);
@@ -100,21 +104,29 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
 
   const handleUpdatePerson = async (updatedPerson: Partial<Person>) => {
     try {
-      await updatePersonMutation.mutateAsync({ id: person.id, ...updatedPerson });
+      setIsUpdating(true); // Disable the person query
+      const result = await updatePersonMutation.mutateAsync({ id: person.id, ...updatedPerson });
+      console.log('Update result:', result);
       setIsEditing(false);
       toast.success('Person updated successfully!');
+      // Force a refresh of the person data
+      router.refresh();
     } catch (error) {
-      toast.error('Failed to update person. Please try again.');
       console.error('Error updating person:', error);
+      toast.error('Failed to update person. Please try again.');
+    } finally {
+      setIsUpdating(false); // Re-enable the query
     }
   };
 
   const handleDelete = async () => {
     try {
+      setIsDeleting(true); // Disable the person query
       await deletePersonMutation.mutateAsync(person.id);
       toast.success(`${person.name} deleted successfully.`);
-      router.push('/people');
+      router.replace('/people');
     } catch (error) {
+      setIsDeleting(false); // Re-enable the query if deletion fails
       toast.error('Failed to delete person. Please try again.');
       console.error('Error deleting person:', error);
     }
@@ -248,7 +260,13 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                 </Button>
               </div>
 
-              {giftIdeas.length > 0 ? (
+              {giftIdeas.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No gift ideas yet. Add your first gift idea!
+                  </p>
+                </div>
+              ) : (
                 <div className="space-y-4">
                   {giftIdeas.map((giftIdea) => (
                     <div
@@ -261,44 +279,24 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                           <h3 className="font-medium text-gray-900 dark:text-white">
                             {giftIdea.idea}
                           </h3>
-                          {giftIdea.description && (
-                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                              {giftIdea.description}
+                          {giftIdea.price_range && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                              {giftIdea.price_range}
                             </p>
                           )}
                         </div>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          giftIdea.status === 'given'
+                          giftIdea.status === 'purchased'
                             ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400'
-                            : giftIdea.status === 'purchased'
+                            : giftIdea.status === 'given'
                             ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-400'
                         }`}>
                           {giftIdea.status.charAt(0).toUpperCase() + giftIdea.status.slice(1)}
                         </span>
                       </div>
-                      {giftIdea.price_range && (
-                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                          Price Range: {giftIdea.price_range}
-                        </p>
-                      )}
                     </div>
                   ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-600 dark:text-gray-400">
-                    No gift ideas added yet
-                  </p>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="mt-4"
-                    onClick={() => router.push(`/gift-ideas/new?personId=${person.id}`)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Your First Gift Idea
-                  </Button>
                 </div>
               )}
             </div>

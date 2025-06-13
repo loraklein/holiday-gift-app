@@ -7,10 +7,9 @@ interface PeopleListProps {
   people: Person[];
   isLoading?: boolean;
   onPersonClick?: (person: Person) => void;
-  onDeleteClick?: (person: Person) => void;
 }
 
-export default function PeopleList({ people, isLoading, onPersonClick, onDeleteClick }: PeopleListProps) {
+export default function PeopleList({ people, isLoading, onPersonClick }: PeopleListProps) {
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -42,7 +41,6 @@ export default function PeopleList({ people, isLoading, onPersonClick, onDeleteC
           key={person.id} 
           person={person} 
           onClick={() => onPersonClick?.(person)}
-          onDeleteClick={() => onDeleteClick?.(person)}
         />
       ))}
     </div>

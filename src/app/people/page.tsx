@@ -2,12 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
-import { usePeople, useCreatePerson, useDeletePerson } from '@/hooks/useApi';
+import { usePeople, useCreatePerson } from '@/hooks/useApi';
 import { Person } from '@/lib/api';
 import PeoplePageHeader from '@/components/people/PeoplePageHeader';
 import PeopleList from '@/components/people/PeopleList';
 import AddPersonForm from '@/components/people/AddPersonForm';
-import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
@@ -17,12 +16,10 @@ export default function PeoplePage() {
   const router = useRouter();
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [personToDelete, setPersonToDelete] = useState<Person | null>(null);
 
   // API hooks
   const { data: people = [], isLoading, error } = usePeople();
   const createPersonMutation = useCreatePerson();
-  const deletePersonMutation = useDeletePerson();
 
   // Filter people based on search query
   const filteredPeople = useMemo(() => {
@@ -44,16 +41,6 @@ export default function PeoplePage() {
     } catch (error) {
       toast.error('Failed to add person. Please try again.');
       console.error('Error creating person:', error);
-    }
-  };
-
-  const handleDeletePerson = async () => {
-    if (!personToDelete) return;
-    try {
-      await deletePersonMutation.mutateAsync(personToDelete.id);
-      setPersonToDelete(null);
-    } catch (error) {
-      console.error('Failed to delete person:', error);
     }
   };
 
@@ -106,7 +93,6 @@ export default function PeoplePage() {
             people={filteredPeople}
             isLoading={isLoading}
             onPersonClick={(person) => router.push(`/people/${person.id}`)}
-            onDeleteClick={setPersonToDelete}
           />
         </div>
       </Card>
@@ -118,18 +104,6 @@ export default function PeoplePage() {
           isSubmitting={createPersonMutation.isPending}
         />
       )}
-
-      <ConfirmDialog
-        isOpen={!!personToDelete}
-        title="Delete Person"
-        message={`Are you sure you want to delete ${personToDelete?.name}? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmVariant="danger"
-        onConfirm={handleDeletePerson}
-        onCancel={() => setPersonToDelete(null)}
-        isLoading={deletePersonMutation.isPending}
-      />
     </div>
   );
 }

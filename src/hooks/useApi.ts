@@ -21,11 +21,11 @@ export function usePeople() {
   });
 }
 
-export function usePerson(id: number) {
+export function usePerson(id: number, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.person(id),
     queryFn: () => api.getPerson(id),
-    enabled: !!id,
+    enabled: options?.enabled !== false && !!id,
   });
 }
 
@@ -60,7 +60,10 @@ export function useDeletePerson() {
   
   return useMutation({
     mutationFn: (id: number) => api.deletePerson(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      // Remove the person from the cache immediately
+      queryClient.removeQueries({ queryKey: queryKeys.person(id) });
+      // Invalidate the people list to refresh it
       queryClient.invalidateQueries({ queryKey: queryKeys.people });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardStats });
     },

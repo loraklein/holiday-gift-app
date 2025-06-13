@@ -1,20 +1,28 @@
 "use client";
 
 import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { usePeople, useEvents, useCreateGiftIdea } from '@/hooks/useApi';
 import { GiftIdea } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import AddGiftIdeaForm from '@/components/gift-ideas/AddGiftIdeaForm';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 
-function NewGiftIdeaPageContent() {
-  const router = useRouter();
+function GiftIdeaFormWithParams() {
   const searchParams = useSearchParams();
   const personId = searchParams.get('personId');
   const eventId = searchParams.get('eventId');
 
+  return (
+    <NewGiftIdeaPageContent
+      initialPersonId={personId ? parseInt(personId) : undefined}
+      initialEventId={eventId ? parseInt(eventId) : undefined}
+    />
+  );
+}
+
+function NewGiftIdeaPageContent({ initialPersonId, initialEventId }: { initialPersonId?: number; initialEventId?: number }) {
+  const router = useRouter();
   const { data: people = [] } = usePeople();
   const { data: events = [] } = useEvents();
   const createGiftIdeaMutation = useCreateGiftIdea();
@@ -43,8 +51,8 @@ function NewGiftIdeaPageContent() {
             isSubmitting={createGiftIdeaMutation.isPending}
             people={people}
             events={events}
-            initialPersonId={personId ? parseInt(personId) : undefined}
-            initialEventId={eventId ? parseInt(eventId) : undefined}
+            initialPersonId={initialPersonId}
+            initialEventId={initialEventId}
           />
         </div>
       </Card>
@@ -68,7 +76,7 @@ export default function NewGiftIdeaPage() {
         </Card>
       </div>
     }>
-      <NewGiftIdeaPageContent />
+      <GiftIdeaFormWithParams />
     </Suspense>
   );
 } 
