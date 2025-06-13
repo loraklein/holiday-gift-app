@@ -1,8 +1,8 @@
 'use client';
 
-import { Gift, Users, Calendar, Cake } from 'lucide-react';
+import { usePeople, useEvents, useGiftIdeas } from "@/hooks/useApi";
 import StatCard from '@/components/ui/StatCard';
-import { usePeople, useEvents, useGiftIdeas } from '@/hooks/useApi';
+import { Users, Calendar, Gift, Cake } from 'lucide-react';
 
 export default function StatsGrid() {
   const { data: people = [] } = usePeople();
@@ -12,47 +12,47 @@ export default function StatsGrid() {
   // Count people with birthdays
   const peopleWithBirthdays = people.filter(person => person.birthday).length;
 
-  const displayStats = {
-    people: {
+  const displayStats = [
+    {
       label: "People",
       value: people.length,
       icon: Users,
-      color: "blue",
       href: "/people",
+      color: "blue" as const,
     },
-    events: {
+    {
       label: "Events",
       value: events.length,
       icon: Calendar,
-      color: "green",
       href: "/events",
+      color: "green" as const,
     },
-    birthdays: {
+    {
       label: "Birthdays",
       value: peopleWithBirthdays,
       icon: Cake,
-      color: "pink",
       href: "/people",
+      color: "pink" as const,
     },
-    giftIdeas: {
+    {
       label: "Gift Ideas",
       value: giftIdeas.length,
       icon: Gift,
-      color: "purple",
       href: "/gift-ideas",
+      color: "purple" as const,
     },
-  };
+  ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {Object.entries(displayStats).map(([key, stat]) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm">
+      {displayStats.map((stat) => (
         <StatCard
-          key={key}
+          key={stat.label}
           label={stat.label}
           value={stat.value}
           icon={stat.icon}
-          color={stat.color}
           href={stat.href}
+          color={stat.color}
         />
       ))}
     </div>
