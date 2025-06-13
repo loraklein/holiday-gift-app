@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Person, Event } from '@/lib/api';
 import Button from '@/components/ui/Button';
@@ -18,6 +18,8 @@ interface AddGiftIdeaFormProps {
   }) => void;
   onCancel: () => void;
   isSubmitting: boolean;
+  initialPersonId?: number;
+  initialEventId?: number;
 }
 
 export default function AddGiftIdeaForm({
@@ -25,16 +27,27 @@ export default function AddGiftIdeaForm({
   events,
   onSubmit,
   onCancel,
-  isSubmitting
+  isSubmitting,
+  initialPersonId,
+  initialEventId
 }: AddGiftIdeaFormProps) {
   const [formData, setFormData] = useState({
-    person_id: '',
-    event_id: '',
+    person_id: initialPersonId?.toString() || '',
+    event_id: initialEventId?.toString() || '',
     idea: '',
     description: '',
     price_range: '',
     url: ''
   });
+
+  useEffect(() => {
+    if (initialPersonId) {
+      setFormData(prev => ({ ...prev, person_id: initialPersonId.toString() }));
+    }
+    if (initialEventId) {
+      setFormData(prev => ({ ...prev, event_id: initialEventId.toString() }));
+    }
+  }, [initialPersonId, initialEventId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
