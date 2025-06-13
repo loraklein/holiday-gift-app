@@ -1,6 +1,6 @@
 'use client';
 
-import { Edit, Trash2, Calendar, User } from 'lucide-react';
+import { Edit, Trash2, Cake, User } from 'lucide-react';
 import { Person } from '@/lib/api';
 import Card from '@/components/ui/Card';
 
@@ -70,7 +70,7 @@ export default function PersonCard({ person, onEdit, onDelete }: PersonCardProps
 
       {person.birthday && (
         <div className="flex items-center text-sm text-gray-600 mb-2">
-          <Calendar size={14} className="mr-2" />
+          <Cake size={14} className="mr-2 text-pink-500" />
           {formatBirthday(person.birthday)}
         </div>
       )}

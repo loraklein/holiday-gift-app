@@ -7,7 +7,6 @@ import {
   useCreateEvent,
   useUpdateEvent,
   useDeleteEvent,
-  usePeople,
 } from "@/hooks/useApi";
 import { Event } from "@/lib/api";
 import EventsPageHeader from "@/components/events/EventsPageHeader";
@@ -15,9 +14,6 @@ import EventsList from "@/components/events/EventsList";
 import AddEventForm from "@/components/events/AddEventForm";
 import EditEventForm from "@/components/events/EditEventForm";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-
-// Extended Event type to handle birthday events
-type ExtendedEvent = Event | (Omit<Event, 'id'> & { id: string; isBirthday?: boolean });
 
 export default function EventsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -27,28 +23,9 @@ export default function EventsPage() {
 
   // API hooks
   const { data: events = [], isLoading, error } = useEvents();
-  const { data: people = [] } = usePeople();
   const createEventMutation = useCreateEvent();
   const updateEventMutation = useUpdateEvent();
   const deleteEventMutation = useDeleteEvent();
-
-  // Transform people with birthdays into event-like objects
-  const birthdayEvents: ExtendedEvent[] = people
-    .filter(person => person.birthday)
-    .map(person => ({
-      id: `birthday-${person.id}`,
-      name: `${person.name}'s Birthday`,
-      event_date: person.birthday || '',
-      description: person.notes || "Birthday",
-      event_type: 'birthday',
-      recurring: true,
-      isBirthday: true,
-      created_at: person.created_at || '',
-      updated_at: person.updated_at || '',
-    }));
-
-  // Combine real events and birthday events
-  const allEvents: ExtendedEvent[] = useMemo(() => [...events, ...birthdayEvents], [events, birthdayEvents]);
 
   function getNextOccurrence(dateStr: string, recurring: boolean = true) {
     if (!dateStr) return new Date(8640000000000000); // far future for invalid dates
@@ -84,7 +61,7 @@ export default function EventsPage() {
 
   // Filter and sort events based on search query and next occurrence
   const filteredEvents = useMemo(() => {
-    let result = allEvents;
+    let result = events;
     
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -105,11 +82,6 @@ export default function EventsPage() {
         return false;
       }
       
-      // Handle birthday events (always recurring)
-      if (typeof event.id === 'string' && event.id.startsWith('birthday-')) {
-        return true;
-      }
-      
       // Handle non-recurring events - only show if they haven't passed
       if (event.recurring === false) {
         const eventDate = new Date(event.event_date);
@@ -124,17 +96,11 @@ export default function EventsPage() {
     
     // Sort by next occurrence
     return result.slice().sort((a, b) => {
-      const aIsBirthday = typeof a.id === 'string' && a.id.startsWith('birthday-');
-      const bIsBirthday = typeof b.id === 'string' && b.id.startsWith('birthday-');
-      const aRecurring = aIsBirthday || a.recurring !== false;
-      const bRecurring = bIsBirthday || b.recurring !== false;
-      
-      const aNext = getNextOccurrence(a.event_date, aRecurring);
-      const bNext = getNextOccurrence(b.event_date, bRecurring);
-      
+      const aNext = getNextOccurrence(a.event_date, a.recurring !== false);
+      const bNext = getNextOccurrence(b.event_date, b.recurring !== false);
       return aNext.getTime() - bNext.getTime();
     });
-  }, [allEvents, searchQuery]);
+  }, [events, searchQuery]);
 
   const handleAddEvent = async (
     eventData: Omit<Event, "id" | "created_at" | "updated_at">
@@ -149,13 +115,8 @@ export default function EventsPage() {
     }
   };
 
-  const handleEditEvent = (event: ExtendedEvent) => {
-    // Don't allow editing birthday events
-    if (typeof event.id === 'string' && event.id.startsWith('birthday-')) {
-      toast.error("Birthday events cannot be edited directly. Edit the person's birthday instead.");
-      return;
-    }
-    setEventToEdit(event as Event);
+  const handleEditEvent = (event: Event) => {
+    setEventToEdit(event);
   };
 
   const handleUpdateEvent = async (id: number, eventData: Partial<Event>) => {
@@ -169,13 +130,7 @@ export default function EventsPage() {
     }
   };
 
-  const handleDeleteEvent = (id: number | string) => {
-    // Don't allow deleting birthday events
-    if (typeof id === 'string' && id.startsWith('birthday-')) {
-      toast.error("Birthday events cannot be deleted. Remove the person's birthday instead.");
-      return;
-    }
-    
+  const handleDeleteEvent = (id: number) => {
     const event = events.find((e) => e.id === id);
     if (!event) return;
     setEventToDelete(event);
@@ -230,7 +185,7 @@ export default function EventsPage() {
       />
 
       <EventsList
-        events={filteredEvents as Event[]}
+        events={filteredEvents}
         onEdit={handleEditEvent}
         onDelete={handleDeleteEvent}
         isLoading={isLoading}

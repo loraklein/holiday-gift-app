@@ -1,60 +1,60 @@
 'use client';
 
-import { Gift, Users, Calendar, CheckCircle } from 'lucide-react';
+import { Gift, Users, Calendar, Cake } from 'lucide-react';
 import StatCard from '@/components/ui/StatCard';
-import { usePeople } from '@/hooks/useApi';
+import { usePeople, useEvents, useGiftIdeas } from '@/hooks/useApi';
 
 export default function StatsGrid() {
-  // Testing with people endpoint instead of dashboard stats
-  const { data: people, isLoading, error } = usePeople();
+  const { data: people = [] } = usePeople();
+  const { data: events = [] } = useEvents();
+  const { data: giftIdeas = [] } = useGiftIdeas();
 
-  // Debug logging
-  console.log('People data:', people);
-  console.log('Loading:', isLoading);
-  console.log('Error:', error);
+  // Count people with birthdays
+  const peopleWithBirthdays = people.filter(person => person.birthday).length;
 
-  // Calculate stats from people data
   const displayStats = {
-    totalPeople: people?.length || 8,
-    totalEvents: 5, // Still mock for now
-    totalGiftIdeas: 12, // Still mock for now  
-    purchasedGifts: 3, // Still mock for now
+    people: {
+      label: "People",
+      value: people.length,
+      icon: Users,
+      color: "blue",
+      href: "/people",
+    },
+    events: {
+      label: "Events",
+      value: events.length,
+      icon: Calendar,
+      color: "green",
+      href: "/events",
+    },
+    birthdays: {
+      label: "Birthdays",
+      value: peopleWithBirthdays,
+      icon: Cake,
+      color: "pink",
+      href: "/people",
+    },
+    giftIdeas: {
+      label: "Gift Ideas",
+      value: giftIdeas.length,
+      icon: Gift,
+      color: "purple",
+      href: "/gift-ideas",
+    },
   };
 
-  if (error) {
-    console.warn('Failed to load people data:', error);
-  }
-
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <StatCard
-        icon={Users}
-        label="People"
-        value={isLoading ? 0 : displayStats.totalPeople}
-        href="/people"
-        color="blue"
-      />
-      <StatCard
-        icon={Calendar}
-        label="Events"
-        value={displayStats.totalEvents}
-        href="/events"
-        color="green"
-      />
-      <StatCard
-        icon={Gift}
-        label="Gift Ideas"
-        value={displayStats.totalGiftIdeas}
-        href="/gift-ideas"
-        color="purple"
-      />
-      <StatCard
-        icon={CheckCircle}
-        label="Purchased"
-        value={displayStats.purchasedGifts}
-        href="/gift-ideas?status=purchased"
-        color="emerald"
-      />
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {Object.entries(displayStats).map(([key, stat]) => (
+        <StatCard
+          key={key}
+          label={stat.label}
+          value={stat.value}
+          icon={stat.icon}
+          color={stat.color}
+          href={stat.href}
+        />
+      ))}
     </div>
   );
 }
