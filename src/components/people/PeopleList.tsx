@@ -6,9 +6,11 @@ import PersonCard from './PersonCard';
 interface PeopleListProps {
   people: Person[];
   isLoading?: boolean;
+  onPersonClick?: (person: Person) => void;
+  onDeleteClick?: (person: Person) => void;
 }
 
-export default function PeopleList({ people, isLoading }: PeopleListProps) {
+export default function PeopleList({ people, isLoading, onPersonClick, onDeleteClick }: PeopleListProps) {
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -36,7 +38,12 @@ export default function PeopleList({ people, isLoading }: PeopleListProps) {
   return (
     <div className="space-y-2">
       {people.map((person) => (
-        <PersonCard key={person.id} person={person} />
+        <PersonCard 
+          key={person.id} 
+          person={person} 
+          onClick={() => onPersonClick?.(person)}
+          onDeleteClick={() => onDeleteClick?.(person)}
+        />
       ))}
     </div>
   );
