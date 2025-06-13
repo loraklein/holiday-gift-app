@@ -122,71 +122,81 @@ export function useDeleteEvent() {
 }
 
 // Gift Ideas hooks
-export function useGiftIdeas() {
+export const useGiftIdeas = () => {
   return useQuery({
-    queryKey: queryKeys.giftIdeas,
+    queryKey: ['giftIdeas'],
     queryFn: () => api.getGiftIdeas(),
   });
-}
+};
 
-export function useGiftIdea(id: number) {
+export const useGiftIdea = (id: number) => {
   return useQuery({
-    queryKey: queryKeys.giftIdea(id),
+    queryKey: ['giftIdea', id],
     queryFn: () => api.getGiftIdea(id),
     enabled: !!id,
   });
-}
+};
 
-export function useGiftIdeasByPerson(personId: number) {
+export const useGiftIdeasByPerson = (personId: number) => {
   return useQuery({
-    queryKey: queryKeys.giftIdeasByPerson(personId),
+    queryKey: ['giftIdeas', 'person', personId],
     queryFn: () => api.getGiftIdeasByPerson(personId),
     enabled: !!personId,
   });
-}
+};
 
-export function useCreateGiftIdea() {
+export const useCreateGiftIdea = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: (giftIdea: Omit<GiftIdea, 'id' | 'created_at' | 'updated_at'>) => 
       api.createGiftIdea(giftIdea),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.giftIdeas });
-      queryClient.invalidateQueries({ queryKey: queryKeys.giftIdeasByPerson(data.person_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardStats });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['giftIdeas'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
-}
+};
 
-export function useUpdateGiftIdea() {
+export const useUpdateGiftIdea = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: ({ id, ...giftIdea }: { id: number } & Partial<GiftIdea>) => 
       api.updateGiftIdea(id, giftIdea),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.giftIdeas });
-      queryClient.invalidateQueries({ queryKey: queryKeys.giftIdea(variables.id) });
-      if (data.person_id) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.giftIdeasByPerson(data.person_id) });
-      }
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardStats });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['giftIdeas'] });
+      queryClient.invalidateQueries({ queryKey: ['giftIdea', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
-}
+};
 
-export function useDeleteGiftIdea() {
+export const usePatchGiftIdea = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, ...giftIdea }: { id: number } & Partial<GiftIdea>) => 
+      api.patchGiftIdea(id, giftIdea),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['giftIdeas'] });
+      queryClient.invalidateQueries({ queryKey: ['giftIdea', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+};
+
+export const useDeleteGiftIdea = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: (id: number) => api.deleteGiftIdea(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.giftIdeas });
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardStats });
+      queryClient.invalidateQueries({ queryKey: ['giftIdeas'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
-}
+};
 
 // Dashboard hooks
 export function useDashboardStats() {

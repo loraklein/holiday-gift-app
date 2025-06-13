@@ -1,7 +1,5 @@
-// API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
-// Types for our API responses
 export interface Person {
   id: number;
   name: string;
@@ -16,7 +14,7 @@ export interface Person {
 export interface Event {
   id: number;
   name: string;
-  event_date: string;  // Changed from 'date' to match your database
+  event_date: string;
   description?: string;
   event_type?: string;
   recurring?: boolean;
@@ -30,11 +28,11 @@ export interface GiftIdea {
   event_id?: number;
   idea: string;
   status: 'idea' | 'purchased' | 'given';
-  price?: number;
+  price_range?: string;
   url?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
+  description?: string;
+  person_name?: string;
+  event_name?: string;
 }
 
 export interface ApiResponse<T> {
@@ -47,7 +45,6 @@ export interface ApiError {
   details?: string;
 }
 
-// Generic API client class
 class ApiClient {
   private baseURL: string;
 
@@ -85,7 +82,6 @@ class ApiClient {
     }
   }
 
-  // Generic CRUD methods
   async get<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'GET' });
   }
@@ -165,27 +161,47 @@ class ApiClient {
 
   // Gift Ideas endpoints
   async getGiftIdeas(): Promise<GiftIdea[]> {
-    return this.get<GiftIdea[]>('/gift-ideas');
+    try {
+      const response = await this.get<{message: string, gift_ideas: GiftIdea[]}>('/gift-ideas');
+      return response.gift_ideas || [];
+    } catch (error) {
+      console.error('Failed to fetch gift ideas:', error);
+      return []; 
+    }
   }
 
   async getGiftIdea(id: number): Promise<GiftIdea> {
-    return this.get<GiftIdea>(`/gift-ideas/${id}`);
+    const response = await this.get<{message: string, gift_idea: GiftIdea}>(`/gift-ideas/${id}`);
+    return response.gift_idea;
   }
 
   async getGiftIdeasByPerson(personId: number): Promise<GiftIdea[]> {
-    return this.get<GiftIdea[]>(`/people/${personId}/gift-ideas`);
+    try {
+      const response = await this.get<{message: string, gift_ideas: GiftIdea[]}>(`/people/${personId}/gift-ideas`);
+      return response.gift_ideas || [];
+    } catch (error) {
+      console.error(`Failed to fetch gift ideas for person ${personId}:`, error);
+      return [];
+    }
   }
 
   async createGiftIdea(giftIdea: Omit<GiftIdea, 'id' | 'created_at' | 'updated_at'>): Promise<GiftIdea> {
-    return this.post<GiftIdea>('/gift-ideas', giftIdea);
+    const response = await this.post<{message: string, gift_idea: GiftIdea}>('/gift-ideas', giftIdea);
+    return response.gift_idea;
   }
 
   async updateGiftIdea(id: number, giftIdea: Partial<GiftIdea>): Promise<GiftIdea> {
-    return this.put<GiftIdea>(`/gift-ideas/${id}`, giftIdea);
+    const response = await this.put<{message: string, gift_idea: GiftIdea}>(`/gift-ideas/${id}`, giftIdea);
+    return response.gift_idea;
+  }
+
+  async patchGiftIdea(id: number, giftIdea: Partial<GiftIdea>): Promise<GiftIdea> {
+    const response = await this.patch<{message: string, gift_idea: GiftIdea}>(`/gift-ideas/${id}`, giftIdea);
+    return response.gift_idea;
   }
 
   async deleteGiftIdea(id: number): Promise<void> {
-    return this.delete<void>(`/gift-ideas/${id}`);
+    await this.delete(`/gift-ideas/${id}`);
   }
 
   // Dashboard stats endpoint
@@ -199,8 +215,6 @@ class ApiClient {
   }
 }
 
-// Create and export the API client instance
 export const api = new ApiClient(API_BASE_URL);
 
-// Export the client class for testing
 export default ApiClient;

@@ -5,7 +5,7 @@ import StatCard from '@/components/ui/StatCard';
 import { usePeople } from '@/hooks/useApi';
 
 export default function StatsGrid() {
-  // Test with people endpoint instead of dashboard stats
+  // Testing with people endpoint instead of dashboard stats
   const { data: people, isLoading, error } = usePeople();
 
   // Debug logging
