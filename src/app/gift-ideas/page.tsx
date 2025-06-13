@@ -1,217 +1,194 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 import {
   useGiftIdeas,
-  useCreateGiftIdea,
-  useUpdateGiftIdea,
-  usePatchGiftIdea,
-  useDeleteGiftIdea,
   usePeople,
-  useEvents,
 } from "@/hooks/useApi";
-import { GiftIdea } from "@/lib/api";
-import GiftIdeasPageHeader from "@/components/gift-ideas/GiftIdeasPageHeader";
-import GiftIdeasList from "@/components/gift-ideas/GiftIdeasList";
-import AddGiftIdeaForm from "@/components/gift-ideas/AddGiftIdeaForm";
-import EditGiftIdeaForm from "@/components/gift-ideas/EditGiftIdeaForm";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import { Plus, Search, X } from "lucide-react";
 
 export default function GiftIdeasPage() {
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [giftIdeaToEdit, setGiftIdeaToEdit] = useState<GiftIdea | null>(null);
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [personFilter, setPersonFilter] = useState<string>("all");
-  const [giftIdeaToDelete, setGiftIdeaToDelete] = useState<GiftIdea | null>(null);
 
-  const { data: giftIdeas = [], isLoading, error } = useGiftIdeas();
+  const { data: giftIdeas = [], isLoading } = useGiftIdeas();
   const { data: people = [] } = usePeople();
-  const { data: events = [] } = useEvents();
-  const createGiftIdeaMutation = useCreateGiftIdea();
-  const updateGiftIdeaMutation = useUpdateGiftIdea();
-  const patchGiftIdeaMutation = usePatchGiftIdea();
-  const deleteGiftIdeaMutation = useDeleteGiftIdea();
 
   const clearAllFilters = () => {
-    setSearchQuery('');
-    setStatusFilter('all');
-    setPersonFilter('all');
+    setSearchQuery("");
+    setStatusFilter("all");
+    setPersonFilter("all");
   };
-  
-  const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'all' || personFilter !== 'all';
+
+  const hasActiveFilters = searchQuery.trim() !== "" || statusFilter !== "all" || personFilter !== "all";
 
   const filteredGiftIdeas = useMemo(() => {
     let result = giftIdeas;
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(giftIdea =>
-        giftIdea.idea.toLowerCase().includes(query) ||
-        giftIdea.description?.toLowerCase().includes(query) ||
-        people.find(p => p.id === giftIdea.person_id)?.name.toLowerCase().includes(query)
+      result = result.filter(
+        (giftIdea) =>
+          giftIdea.idea.toLowerCase().includes(query) ||
+          giftIdea.description?.toLowerCase().includes(query) ||
+          people.find((p) => p.id === giftIdea.person_id)?.name.toLowerCase().includes(query)
       );
     }
 
     if (statusFilter !== "all") {
-      result = result.filter(giftIdea => giftIdea.status === statusFilter);
+      result = result.filter((giftIdea) => giftIdea.status === statusFilter);
     }
 
     if (personFilter !== "all") {
-      result = result.filter(giftIdea => giftIdea.person_id === Number(personFilter));
+      result = result.filter((giftIdea) => giftIdea.person_id === Number(personFilter));
     }
 
     return result.slice().sort((a, b) => b.id - a.id);
   }, [giftIdeas, searchQuery, statusFilter, personFilter, people]);
 
-  const handleAddGiftIdea = async (
-    giftIdeaData: Omit<GiftIdea, "id" | "created_at" | "updated_at">
-  ) => {
-    try {
-      await createGiftIdeaMutation.mutateAsync(giftIdeaData);
-      setShowAddForm(false);
-      toast.success("Gift idea added successfully!");
-    } catch (error) {
-      toast.error("Failed to add gift idea. Please try again.");
-      console.error("Error creating gift idea:", error);
-    }
-  };
-
-  const handleEditGiftIdea = (giftIdea: GiftIdea) => {
-    setGiftIdeaToEdit(giftIdea);
-  };
-
-  const handleUpdateGiftIdea = async (id: number, giftIdeaData: Partial<GiftIdea>) => {
-    try {
-      await updateGiftIdeaMutation.mutateAsync({ id, ...giftIdeaData });
-      setGiftIdeaToEdit(null);
-      toast.success("Gift idea updated successfully!");
-    } catch (error) {
-      toast.error("Failed to update gift idea. Please try again.");
-      console.error("Error updating gift idea:", error);
-    }
-  };
-
-  const handleQuickStatusUpdate = async (id: number, status: GiftIdea['status']) => {
-    try {
-      await patchGiftIdeaMutation.mutateAsync({ id, status });
-      toast.success(`Status updated to ${status}!`);
-    } catch (error) {
-      toast.error("Failed to update status. Please try again.");
-      console.error("Error updating status:", error);
-    }
-  };
-
-  const handleDeleteGiftIdea = (id: number) => {
-    const giftIdea = giftIdeas.find((gi) => gi.id === id);
-    if (!giftIdea) return;
-    setGiftIdeaToDelete(giftIdea);
-  };
-
-  const confirmDelete = async () => {
-    if (!giftIdeaToDelete) return;
-    try {
-      await deleteGiftIdeaMutation.mutateAsync(giftIdeaToDelete.id);
-      toast.success("Gift idea deleted successfully.");
-      setGiftIdeaToDelete(null);
-    } catch (error) {
-      toast.error("Failed to delete gift idea. Please try again.");
-      console.error("Error deleting gift idea:", error);
-    }
-  };
-
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <GiftIdeasPageHeader
-          onAddClick={() => setShowAddForm(true)}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          personFilter={personFilter}
-          onPersonFilterChange={setPersonFilter}
-          people={people}
-          onClearFilters={clearAllFilters}
-          hasActiveFilters={hasActiveFilters}
-        />
-        <div className="text-center py-12">
-          <div className="text-red-600 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load gift ideas</h3>
-          <p className="text-gray-600 mb-4">There was an error loading your gift ideas. Please try refreshing the page.</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Refresh Page
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <GiftIdeasPageHeader
-        onAddClick={() => setShowAddForm(true)}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        personFilter={personFilter}
-        onPersonFilterChange={setPersonFilter}
-        people={people}
-        onClearFilters={clearAllFilters}
-        hasActiveFilters={hasActiveFilters}
-      />
+    <div className="max-w-7xl mx-auto py-8 px-4">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Gift Ideas
+        </h1>
+        <Button
+          variant="primary"
+          onClick={() => router.push("/gift-ideas/new")}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Gift Idea
+        </Button>
+      </div>
 
-      <GiftIdeasList
-        giftIdeas={filteredGiftIdeas}
-        people={people}
-        events={events}
-        onEdit={handleEditGiftIdea}
-        onDelete={handleDeleteGiftIdea}
-        onStatusUpdate={handleQuickStatusUpdate}
-        isLoading={isLoading}
-      />
+      <Card>
+        <div className="p-6">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  type="text"
+                  placeholder="Search gift ideas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Statuses</option>
+                <option value="idea">Idea</option>
+                <option value="purchased">Purchased</option>
+                <option value="given">Given</option>
+              </select>
+              <select
+                value={personFilter}
+                onChange={(e) => setPersonFilter(e.target.value)}
+                className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All People</option>
+                {people.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.name}
+                  </option>
+                ))}
+              </select>
+              {hasActiveFilters && (
+                <Button
+                  variant="secondary"
+                  onClick={clearAllFilters}
+                  className="flex items-center"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </div>
 
-      {showAddForm && (
-        <AddGiftIdeaForm
-          people={people}
-          events={events}
-          onSubmit={handleAddGiftIdea}
-          onCancel={() => setShowAddForm(false)}
-          isSubmitting={createGiftIdeaMutation.isPending}
-        />
-      )}
+          {isLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-24 bg-gray-100 dark:bg-gray-800 rounded-lg" />
+                </div>
+              ))}
+            </div>
+          ) : filteredGiftIdeas.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                No gift ideas found
+              </p>
+              <Button
+                variant="primary"
+                onClick={() => router.push("/gift-ideas/new")}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your First Gift Idea
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredGiftIdeas.map((giftIdea) => {
+                const person = people.find((p) => p.id === giftIdea.person_id);
 
-      {giftIdeaToEdit && (
-        <EditGiftIdeaForm
-          giftIdea={giftIdeaToEdit}
-          people={people}
-          events={events}
-          onSubmit={handleUpdateGiftIdea}
-          onCancel={() => setGiftIdeaToEdit(null)}
-          isSubmitting={updateGiftIdeaMutation.isPending}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={!!giftIdeaToDelete}
-        title="Delete Gift Idea"
-        message={`Are you sure you want to delete "${giftIdeaToDelete?.idea}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmVariant="danger"
-        onConfirm={confirmDelete}
-        onCancel={() => setGiftIdeaToDelete(null)}
-        isLoading={deleteGiftIdeaMutation.isPending}
-      />
+                return (
+                  <div
+                    key={giftIdea.id}
+                    className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/gift-ideas/${giftIdea.id}`)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-medium text-gray-900 dark:text-white">
+                          {giftIdea.idea}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          for {person?.name || "Unknown Person"}
+                        </p>
+                        {giftIdea.description && (
+                          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            {giftIdea.description}
+                          </p>
+                        )}
+                      </div>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          giftIdea.status === "given"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400"
+                            : giftIdea.status === "purchased"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400"
+                            : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400"
+                        }`}
+                      >
+                        {giftIdea.status.charAt(0).toUpperCase() +
+                          giftIdea.status.slice(1)}
+                      </span>
+                    </div>
+                    {giftIdea.price_range && (
+                      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        Price Range: {giftIdea.price_range}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }

@@ -2,25 +2,19 @@
 
 import { useState, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
-import { usePeople, useCreatePerson, useUpdatePerson, useDeletePerson } from '@/hooks/useApi';
+import { usePeople, useCreatePerson } from '@/hooks/useApi';
 import { Person } from '@/lib/api';
 import PeoplePageHeader from '@/components/people/PeoplePageHeader';
 import PeopleList from '@/components/people/PeopleList';
 import AddPersonForm from '@/components/people/AddPersonForm';
-import EditPersonForm from '@/components/people/EditPersonForm';
-import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function PeoplePage() {
   const [showAddForm, setShowAddForm] = useState(false);
-  const [personToEdit, setPersonToEdit] = useState<Person | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [personToDelete, setPersonToDelete] = useState<Person | null>(null);
 
   // API hooks
   const { data: people = [], isLoading, error } = usePeople();
   const createPersonMutation = useCreatePerson();
-  const updatePersonMutation = useUpdatePerson();
-  const deletePersonMutation = useDeletePerson();
 
   // Filter people based on search query
   const filteredPeople = useMemo(() => {
@@ -29,7 +23,6 @@ export default function PeoplePage() {
     const query = searchQuery.toLowerCase();
     return people.filter(person =>
       person.name.toLowerCase().includes(query) ||
-      person.email?.toLowerCase().includes(query) ||
       person.relationship?.toLowerCase().includes(query) ||
       person.notes?.toLowerCase().includes(query)
     );
@@ -43,41 +36,6 @@ export default function PeoplePage() {
     } catch (error) {
       toast.error('Failed to add person. Please try again.');
       console.error('Error creating person:', error);
-    }
-  };
-
-  const handleEditPerson = (person: Person) => {
-    setPersonToEdit(person);
-  };
-
-  const handleUpdatePerson = async (id: number, personData: Partial<Person>) => {
-    try {
-      await updatePersonMutation.mutateAsync({ id, ...personData });
-      setPersonToEdit(null);
-      toast.success('Person updated successfully!');
-    } catch (error) {
-      toast.error('Failed to update person. Please try again.');
-      console.error('Error updating person:', error);
-    }
-  };
-
-  const handleDeletePerson = (id: number) => {
-    const person = people.find(p => p.id === id);
-    if (!person) return;
-    
-    setPersonToDelete(person);
-  };
-
-  const confirmDelete = async () => {
-    if (!personToDelete) return;
-
-    try {
-      await deletePersonMutation.mutateAsync(personToDelete.id);
-      toast.success(`${personToDelete.name} deleted successfully.`);
-      setPersonToDelete(null);
-    } catch (error) {
-      toast.error('Failed to delete person. Please try again.');
-      console.error('Error deleting person:', error);
     }
   };
 
@@ -111,7 +69,7 @@ export default function PeoplePage() {
 
   return (
     <div className="space-y-6">
-      <PeoplePageHeader 
+      <PeoplePageHeader
         onAddClick={() => setShowAddForm(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -119,8 +77,6 @@ export default function PeoplePage() {
 
       <PeopleList
         people={filteredPeople}
-        onEdit={handleEditPerson}
-        onDelete={handleDeletePerson}
         isLoading={isLoading}
       />
 
@@ -131,27 +87,6 @@ export default function PeoplePage() {
           isSubmitting={createPersonMutation.isPending}
         />
       )}
-
-      {personToEdit && (
-        <EditPersonForm
-          person={personToEdit}
-          onSubmit={handleUpdatePerson}
-          onCancel={() => setPersonToEdit(null)}
-          isSubmitting={updatePersonMutation.isPending}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={!!personToDelete}
-        title="Delete Person"
-        message={`Are you sure you want to delete ${personToDelete?.name}? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmVariant="danger"
-        onConfirm={confirmDelete}
-        onCancel={() => setPersonToDelete(null)}
-        isLoading={deletePersonMutation.isPending}
-      />
     </div>
   );
 }

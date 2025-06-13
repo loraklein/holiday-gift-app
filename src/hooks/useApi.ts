@@ -138,11 +138,13 @@ export const useGiftIdea = (id: number) => {
 };
 
 export const useGiftIdeasByPerson = (personId: number) => {
-  return useQuery({
-    queryKey: ['giftIdeas', 'person', personId],
-    queryFn: () => api.getGiftIdeasByPerson(personId),
-    enabled: !!personId,
-  });
+  const { data: allGiftIdeas = [] } = useGiftIdeas();
+  
+  return {
+    data: allGiftIdeas.filter(giftIdea => giftIdea.person_id === personId),
+    isLoading: false,
+    error: null
+  };
 };
 
 export const useCreateGiftIdea = () => {

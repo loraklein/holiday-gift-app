@@ -3,7 +3,6 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/a
 export interface Person {
   id: number;
   name: string;
-  email?: string;
   relationship?: string;
   birthday?: string;
   notes?: string;
@@ -67,17 +66,24 @@ class ApiClient {
     };
 
     try {
+      console.log(`Making request to: ${url}`);
       const response = await fetch(url, config);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error(`API request failed: ${url}`, {
+          status: response.status,
+          statusText: response.statusText,
+          errorData
+        });
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log(`Response from ${url}:`, data);
       return data;
     } catch (error) {
-      console.error(`API request failed: ${endpoint}`, error);
+      console.error(`API request failed: ${url}`, error);
       throw error;
     }
   }
@@ -118,7 +124,8 @@ class ApiClient {
   }
 
   async getPerson(id: number): Promise<Person> {
-    return this.get<Person>(`/people/${id}`);
+    const response = await this.get<{message: string, person: Person}>(`/people/${id}`);
+    return response.person; // Extract the person from the wrapper
   }
 
   async createPerson(person: Omit<Person, 'id' | 'created_at' | 'updated_at'>): Promise<Person> {
@@ -173,16 +180,6 @@ class ApiClient {
   async getGiftIdea(id: number): Promise<GiftIdea> {
     const response = await this.get<{message: string, gift_idea: GiftIdea}>(`/gift-ideas/${id}`);
     return response.gift_idea;
-  }
-
-  async getGiftIdeasByPerson(personId: number): Promise<GiftIdea[]> {
-    try {
-      const response = await this.get<{message: string, gift_ideas: GiftIdea[]}>(`/people/${personId}/gift-ideas`);
-      return response.gift_ideas || [];
-    } catch (error) {
-      console.error(`Failed to fetch gift ideas for person ${personId}:`, error);
-      return [];
-    }
   }
 
   async createGiftIdea(giftIdea: Omit<GiftIdea, 'id' | 'created_at' | 'updated_at'>): Promise<GiftIdea> {

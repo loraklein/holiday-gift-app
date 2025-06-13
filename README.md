@@ -53,7 +53,6 @@ The application uses several powerful npm packages to enhance functionality:
 interface Person {
   id: number;
   name: string;
-  email?: string;
   relationship?: string;
   birthday?: string;
   notes?: string;

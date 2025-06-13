@@ -1,4 +1,7 @@
-import { ReactNode } from 'react';
+'use client';
+
+import { HTMLAttributes } from 'react';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 interface CardHeaderProps {
@@ -26,14 +29,15 @@ export function CardHeader({ title, action, showBorder = true }: CardHeaderProps
   );
 }
 
-interface CardProps {
-  children: ReactNode;
-  className?: string;
-}
-
-export default function Card({ children, className = '' }: CardProps) {
+export default function Card({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
+    <div
+      className={cn(
+        'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700',
+        className
+      )}
+      {...props}
+    >
       {children}
     </div>
   );
