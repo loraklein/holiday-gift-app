@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { toast } from "react-hot-toast";
+import { useSearchParams } from "next/navigation";
 import {
   useEvents,
   useCreateEvent,
@@ -16,11 +17,33 @@ import EditEventForm from "@/components/events/EditEventForm";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 export default function EventsPage() {
+  const searchParams = useSearchParams();
   const [showAddForm, setShowAddForm] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
   const [showPastEvents, setShowPastEvents] = useState(false);
+
+  // Listen for the showAddEventForm event
+  useEffect(() => {
+    const handleShowAddForm = () => {
+      setShowAddForm(true);
+    };
+
+    window.addEventListener('showAddEventForm', handleShowAddForm);
+    return () => {
+      window.removeEventListener('showAddEventForm', handleShowAddForm);
+    };
+  }, []);
+
+  // Show add form if coming from quick link
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setShowAddForm(true);
+      // Update URL without triggering a page reload
+      window.history.replaceState({}, '', '/events');
+    }
+  }, [searchParams]);
 
   // API hooks
   const { data: events = [], isLoading, error } = useEvents();

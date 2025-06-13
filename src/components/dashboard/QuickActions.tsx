@@ -5,14 +5,22 @@ import { useRouter } from 'next/navigation';
 import { Gift, Users, Calendar } from 'lucide-react';
 import Card, { CardHeader } from '@/components/ui/Card';
 import AddPersonForm from '@/components/people/AddPersonForm';
-import { useCreatePerson } from '@/hooks/useApi';
-import { Person } from '@/lib/api';
+import AddGiftIdeaForm from '@/components/gift-ideas/AddGiftIdeaForm';
+import AddEventForm from '@/components/events/AddEventForm';
+import { useCreatePerson, useCreateGiftIdea, useCreateEvent, usePeople, useEvents } from '@/hooks/useApi';
+import { Person, GiftIdea, Event } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 
 export default function QuickActions() {
   const router = useRouter();
   const [showAddPersonForm, setShowAddPersonForm] = useState(false);
+  const [showAddGiftIdeaForm, setShowAddGiftIdeaForm] = useState(false);
+  const [showAddEventForm, setShowAddEventForm] = useState(false);
   const createPersonMutation = useCreatePerson();
+  const createGiftIdeaMutation = useCreateGiftIdea();
+  const createEventMutation = useCreateEvent();
+  const { data: people = [] } = usePeople();
+  const { data: events = [] } = useEvents();
 
   const handleAddPerson = async (personData: Partial<Person>) => {
     try {
@@ -23,6 +31,30 @@ export default function QuickActions() {
     } catch (error) {
       console.error('Failed to add person:', error);
       toast.error('Failed to add person');
+    }
+  };
+
+  const handleAddGiftIdea = async (giftIdeaData: Partial<GiftIdea>) => {
+    try {
+      await createGiftIdeaMutation.mutateAsync(giftIdeaData as Omit<GiftIdea, 'id' | 'created_at' | 'updated_at'>);
+      setShowAddGiftIdeaForm(false);
+      toast.success('Gift idea added successfully!');
+      router.push('/gift-ideas');
+    } catch (error) {
+      console.error('Failed to add gift idea:', error);
+      toast.error('Failed to add gift idea');
+    }
+  };
+
+  const handleAddEvent = async (eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      await createEventMutation.mutateAsync(eventData);
+      setShowAddEventForm(false);
+      toast.success(`${eventData.name} added successfully!`);
+      router.push('/events');
+    } catch (error) {
+      console.error('Failed to add event:', error);
+      toast.error('Failed to add event');
     }
   };
 
@@ -38,13 +70,13 @@ export default function QuickActions() {
             description="Add someone new to your list"
           />
           <QuickActionButton
-            onClick={() => router.push('/events/new')}
+            onClick={() => setShowAddEventForm(true)}
             icon={Calendar}
             label="Add Event"
             description="Create a new event or holiday"
           />
           <QuickActionButton
-            onClick={() => router.push('/gift-ideas/new')}
+            onClick={() => setShowAddGiftIdeaForm(true)}
             icon={Gift}
             label="Add Gift Idea"
             description="Save a new gift idea"
@@ -57,6 +89,24 @@ export default function QuickActions() {
           onSubmit={handleAddPerson}
           onCancel={() => setShowAddPersonForm(false)}
           isSubmitting={createPersonMutation.isPending}
+        />
+      )}
+
+      {showAddEventForm && (
+        <AddEventForm
+          onSubmit={handleAddEvent}
+          onCancel={() => setShowAddEventForm(false)}
+          isSubmitting={createEventMutation.isPending}
+        />
+      )}
+
+      {showAddGiftIdeaForm && (
+        <AddGiftIdeaForm
+          onSubmit={handleAddGiftIdea}
+          onCancel={() => setShowAddGiftIdeaForm(false)}
+          isSubmitting={createGiftIdeaMutation.isPending}
+          people={people}
+          events={events}
         />
       )}
     </>
