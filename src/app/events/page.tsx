@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { toast } from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
 import {
@@ -16,7 +16,7 @@ import AddEventForm from "@/components/events/AddEventForm";
 import EditEventForm from "@/components/events/EditEventForm";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
-export default function EventsPage() {
+function EventsPageContent() {
   const searchParams = useSearchParams();
   const [showAddForm, setShowAddForm] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
@@ -265,5 +265,13 @@ export default function EventsPage() {
         isLoading={deleteEventMutation.isPending}
       />
     </div>
+  );
+}
+
+export default function EventsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EventsPageContent />
+    </Suspense>
   );
 }
