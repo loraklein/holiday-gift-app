@@ -10,18 +10,28 @@ import { toast } from 'react-hot-toast';
 
 function GiftIdeaFormWithParams() {
   const searchParams = useSearchParams();
-  const personId = searchParams.get('personId');
-  const eventId = searchParams.get('eventId');
+  const personId = searchParams.get('person_id');
+  const eventId = searchParams.get('event_id');
+  const returnTo = searchParams.get('return_to');
 
   return (
     <NewGiftIdeaPageContent
       initialPersonId={personId ? parseInt(personId) : undefined}
       initialEventId={eventId ? parseInt(eventId) : undefined}
+      returnTo={returnTo}
     />
   );
 }
 
-function NewGiftIdeaPageContent({ initialPersonId, initialEventId }: { initialPersonId?: number; initialEventId?: number }) {
+function NewGiftIdeaPageContent({ 
+  initialPersonId, 
+  initialEventId,
+  returnTo 
+}: { 
+  initialPersonId?: number; 
+  initialEventId?: number;
+  returnTo?: string | null;
+}) {
   const router = useRouter();
   const { data: people = [] } = usePeople();
   const { data: events = [] } = useEvents();
@@ -31,11 +41,17 @@ function NewGiftIdeaPageContent({ initialPersonId, initialEventId }: { initialPe
     try {
       await createGiftIdeaMutation.mutateAsync(giftIdeaData as Omit<GiftIdea, 'id' | 'created_at' | 'updated_at'>);
       toast.success('Gift idea added successfully!');
-      router.push('/gift-ideas');
+      // If we have a return path, go back there, otherwise go to gift ideas list
+      router.push(returnTo || '/gift-ideas');
     } catch (error) {
       console.error('Failed to add gift idea:', error);
       toast.error('Failed to add gift idea');
     }
+  };
+
+  const handleCancel = () => {
+    // If we have a return path, go back there, otherwise go to gift ideas list
+    router.push(returnTo || '/gift-ideas');
   };
 
   return (
@@ -47,7 +63,7 @@ function NewGiftIdeaPageContent({ initialPersonId, initialEventId }: { initialPe
           </h1>
           <AddGiftIdeaForm
             onSubmit={handleSubmit}
-            onCancel={() => router.push('/gift-ideas')}
+            onCancel={handleCancel}
             isSubmitting={createGiftIdeaMutation.isPending}
             people={people}
             events={events}

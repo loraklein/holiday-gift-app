@@ -69,7 +69,7 @@ export default function StatsGrid() {
         label: "Birthdays",
         value: peopleWithBirthdays,
         icon: Cake,
-        href: "/people",
+        href: "/birthdays",
         color: "pink" as const,
       },
       {
