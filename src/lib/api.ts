@@ -70,13 +70,24 @@ class ApiClient {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // If we can't parse the error response as JSON, use the default error message
+          console.warn('Could not parse error response as JSON:', e);
+        }
+        
         console.error(`API request failed: ${url}`, {
           status: response.status,
           statusText: response.statusText,
-          errorData
+          errorMessage
         });
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { useGiftIdea, useUpdateGiftIdea, useDeleteGiftIdea, usePeople, useEvents } from '@/hooks/useApi';
+import { useGiftIdea, usePatchGiftIdea, useDeleteGiftIdea, usePeople, useEvents } from '@/hooks/useApi';
 import { GiftIdea } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -28,7 +28,7 @@ export default function GiftIdeaDetailPage({ params }: GiftIdeaDetailPageProps) 
   const { data: giftIdea, isLoading, error } = useGiftIdea(parseInt(id));
   const { data: people = [] } = usePeople();
   const { data: events = [] } = useEvents();
-  const updateGiftIdeaMutation = useUpdateGiftIdea();
+  const patchGiftIdeaMutation = usePatchGiftIdea();
   const deleteGiftIdeaMutation = useDeleteGiftIdea();
 
   if (isLoading) {
@@ -69,7 +69,7 @@ export default function GiftIdeaDetailPage({ params }: GiftIdeaDetailPageProps) 
 
   const handleUpdateStatus = async (newStatus: GiftIdea['status']) => {
     try {
-      await updateGiftIdeaMutation.mutateAsync({
+      await patchGiftIdeaMutation.mutateAsync({
         id: giftIdea.id,
         status: newStatus
       });
@@ -236,29 +236,41 @@ export default function GiftIdeaDetailPage({ params }: GiftIdeaDetailPageProps) 
             )}
           </div>
 
-          <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
               Update Status
             </h3>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
-                variant={giftIdea.status === 'idea' ? 'primary' : 'secondary'}
+                variant={giftIdea.status === 'idea' ? 'primary' : 'ghost'}
                 onClick={() => handleUpdateStatus('idea')}
-                disabled={giftIdea.status === 'idea'}
+                className={`${
+                  giftIdea.status === 'idea'
+                    ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                }`}
               >
                 Idea
               </Button>
               <Button
-                variant={giftIdea.status === 'purchased' ? 'primary' : 'secondary'}
+                variant={giftIdea.status === 'purchased' ? 'primary' : 'ghost'}
                 onClick={() => handleUpdateStatus('purchased')}
-                disabled={giftIdea.status === 'purchased'}
+                className={`${
+                  giftIdea.status === 'purchased'
+                    ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/50 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/70'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                }`}
               >
                 Purchased
               </Button>
               <Button
-                variant={giftIdea.status === 'given' ? 'primary' : 'secondary'}
+                variant={giftIdea.status === 'given' ? 'primary' : 'ghost'}
                 onClick={() => handleUpdateStatus('given')}
-                disabled={giftIdea.status === 'given'}
+                className={`${
+                  giftIdea.status === 'given'
+                    ? 'bg-green-100 text-green-900 dark:bg-green-900/50 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/70'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                }`}
               >
                 Given
               </Button>
