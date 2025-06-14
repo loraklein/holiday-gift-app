@@ -32,17 +32,41 @@ The application uses several powerful npm packages to enhance functionality:
    - Purpose: Server state management and data fetching
    - Used for: Caching, background updates, and optimistic updates
 
-3. **framer-motion** (v12.17.0)
+3. **@tanstack/react-query-devtools** (v5.80.7)
+   - Purpose: Development tools for React Query
+   - Used for: Debugging and monitoring queries in development
+
+4. **axios** (v1.9.0)
+   - Purpose: HTTP client
+   - Used for: Making API requests with better error handling
+
+5. **clsx** (v2.1.1)
+   - Purpose: Utility for constructing className strings
+   - Used for: Conditional class names and style composition
+
+6. **date-fns** (v4.1.0)
+   - Purpose: Date utility library
+   - Used for: Date formatting and manipulation
+
+7. **framer-motion** (v12.17.0)
    - Purpose: Animation library
    - Used for: Page transitions and interactive animations
 
-4. **react-hook-form** (v7.57.0)
+8. **lucide-react** (v0.514.0)
+   - Purpose: Icon library
+   - Used for: Consistent and customizable icons throughout the app
+
+9. **react-hook-form** (v7.57.0)
    - Purpose: Form handling and validation
    - Used for: All form inputs and data submission
 
-5. **react-hot-toast** (v2.5.2)
-   - Purpose: Toast notifications
-   - Used for: User feedback and error messages
+10. **react-hot-toast** (v2.5.2)
+    - Purpose: Toast notifications
+    - Used for: User feedback and error messages
+
+11. **tailwind-merge** (v3.3.1)
+    - Purpose: Utility for merging Tailwind CSS classes
+    - Used for: Resolving class conflicts and dynamic styling
 
 ## API Documentation
 
