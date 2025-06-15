@@ -175,8 +175,26 @@ class ApiClient {
   }
 
   async updateEvent(id: number, event: Partial<Event>): Promise<Event> {
-    const response = await this.patch<{message: string, event: Event}>(`/events/${id}`, event);
-    return response.event;
+    try {
+      console.log('API client received event data:', event);
+      
+      // Remove any undefined values
+      const eventData = Object.fromEntries(
+        Object.entries(event).filter(([, value]) => value !== undefined)
+      );
+
+      console.log('API client filtered event data:', eventData);
+
+      if (Object.keys(eventData).length === 0) {
+        throw new Error('No fields provided to update');
+      }
+
+      const response = await this.patch<{message: string, event: Event}>(`/events/${id}`, eventData);
+      return response.event;
+    } catch (error) {
+      console.error('Error updating event:', error);
+      throw error;
+    }
   }
 
   async deleteEvent(id: number): Promise<void> {

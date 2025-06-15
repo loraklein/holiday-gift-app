@@ -1,62 +1,86 @@
-import { GiftIdea, Person, Event } from '@/lib/api';
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Search } from 'lucide-react';
+import { useGiftIdeas, usePeople, useEvents } from '@/hooks/useApi';
+import Input from '@/components/ui/Input';
+import Card from '@/components/ui/Card';
 import GiftIdeaCard from './GiftIdeaCard';
+import GiftIdeasLoading from '@/app/gift-ideas/loading';
 
-interface GiftIdeasListProps {
-  giftIdeas: GiftIdea[];
-  people: Person[];
-  events: Event[];
-  onEdit: (giftIdea: GiftIdea) => void;
-  onDelete: (id: number) => void;
-  onStatusUpdate: (id: number, status: GiftIdea['status']) => void;
-  isLoading?: boolean;
-}
+export default function GiftIdeasList() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
 
-export default function GiftIdeasList({
-  giftIdeas,
-  people,
-  events,
-  onEdit,
-  onDelete,
-  onStatusUpdate,
-  isLoading
-}: GiftIdeasListProps) {
-  if (isLoading) {
+  const { data: giftIdeas = [], isLoading: isLoadingGiftIdeas } = useGiftIdeas();
+  const { data: people = [], isLoading: isLoadingPeople } = usePeople();
+  const { data: events = [], isLoading: isLoadingEvents } = useEvents();
+
+  const isLoading = isLoadingGiftIdeas || isLoadingPeople || isLoadingEvents;
+
+  const filteredGiftIdeas = giftIdeas.filter(giftIdea => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
     return (
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-48 bg-gray-100 rounded-lg animate-pulse" />
-        ))}
-      </div>
+      giftIdea.idea.toLowerCase().includes(query) ||
+      giftIdea.description?.toLowerCase().includes(query) ||
+      giftIdea.person_name?.toLowerCase().includes(query) ||
+      giftIdea.event_name?.toLowerCase().includes(query)
     );
+  });
+
+  if (isLoading) {
+    return <GiftIdeasLoading />;
   }
 
-  if (giftIdeas.length === 0) {
+  if (filteredGiftIdeas.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-400 mb-4">
-          <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No gift ideas yet</h3>
-        <p className="text-gray-600 mb-4">Start by adding your first gift idea for someone special.</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-4">
+          No gift ideas found
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {giftIdeas.map((giftIdea) => (
-        <GiftIdeaCard
-          key={giftIdea.id}
-          giftIdea={giftIdea}
-          people={people}
-          events={events}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onStatusUpdate={onStatusUpdate}
-        />
-      ))}
-    </div>
+    <Card>
+      <div className="p-6">
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search gift ideas..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {filteredGiftIdeas.map((giftIdea) => (
+            <GiftIdeaCard
+              key={giftIdea.id}
+              giftIdea={giftIdea}
+              people={people}
+              events={events}
+              onEdit={(giftIdea) => router.push(`/gift-ideas/${giftIdea.id}/edit`)}
+              onDelete={(id) => {
+                // Handle delete in the parent component
+                console.log('Delete gift idea:', id);
+              }}
+              onStatusUpdate={(id, status) => {
+                // Handle status update in the parent component
+                console.log('Update gift idea status:', id, status);
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    </Card>
   );
 }

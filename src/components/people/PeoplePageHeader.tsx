@@ -1,4 +1,5 @@
 import { Plus, Search } from 'lucide-react';
+import Button from '@/components/ui/Button';
 
 interface PeoplePageHeaderProps {
   onAddClick: () => void;
@@ -12,30 +13,30 @@ export default function PeoplePageHeader({
   onSearchChange 
 }: PeoplePageHeaderProps) {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">People</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">Manage your gift recipients</p>
+    <div className="flex items-center justify-between mb-6">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        People
+      </h1>
+      <div className="flex items-center gap-4">
+        <div className="relative w-64">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search people..."
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
         </div>
-        <button
+        <Button
           onClick={onAddClick}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          variant="primary"
         >
-          <Plus size={20} className="mr-2" />
+          <Plus className="w-4 h-4 mr-2" />
           Add Person
-        </button>
-      </div>
-
-      <div className="relative">
-        <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search people..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-        />
+        </Button>
       </div>
     </div>
   );

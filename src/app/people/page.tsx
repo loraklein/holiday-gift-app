@@ -1,37 +1,18 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, Suspense } from 'react';
 import { toast } from 'react-hot-toast';
-import { usePeople, useCreatePerson } from '@/hooks/useApi';
+import { useCreatePerson } from '@/hooks/useApi';
 import { Person } from '@/lib/api';
-import PeoplePageHeader from '@/components/people/PeoplePageHeader';
-import PeopleList from '@/components/people/PeopleList';
-import AddPersonForm from '@/components/people/AddPersonForm';
 import { Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
+import AddPersonForm from '@/components/people/AddPersonForm';
+import { PeopleList } from '@/components/people/PeopleList';
+import PeopleLoading from './loading';
 
-export default function PeoplePage() {
-  const router = useRouter();
+function PeoplePageContent() {
   const [showAddForm, setShowAddForm] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // API hooks
-  const { data: people = [], isLoading, error } = usePeople();
   const createPersonMutation = useCreatePerson();
-
-  // Filter people based on search query
-  const filteredPeople = useMemo(() => {
-    if (!searchQuery.trim()) return people;
-    
-    const query = searchQuery.toLowerCase();
-    return people.filter(person =>
-      person.name.toLowerCase().includes(query) ||
-      person.relationship?.toLowerCase().includes(query) ||
-      person.notes?.toLowerCase().includes(query)
-    );
-  }, [people, searchQuery]);
 
   const handleAddPerson = async (personData: Partial<Person>) => {
     try {
@@ -43,34 +24,6 @@ export default function PeoplePage() {
       console.error('Error creating person:', error);
     }
   };
-
-  // Handle error state
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <PeoplePageHeader 
-          onAddClick={() => setShowAddForm(true)}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-        <div className="text-center py-12">
-          <div className="text-red-600 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load people</h3>
-          <p className="text-gray-600 mb-4">There was an error loading your people. Please try refreshing the page.</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Refresh Page
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -87,15 +40,7 @@ export default function PeoplePage() {
         </Button>
       </div>
 
-      <Card>
-        <div className="p-6">
-          <PeopleList
-            people={filteredPeople}
-            isLoading={isLoading}
-            onPersonClick={(person) => router.push(`/people/${person.id}`)}
-          />
-        </div>
-      </Card>
+      <PeopleList />
 
       {showAddForm && (
         <AddPersonForm
@@ -105,5 +50,13 @@ export default function PeoplePage() {
         />
       )}
     </div>
+  );
+}
+
+export default function PeoplePage() {
+  return (
+    <Suspense fallback={<PeopleLoading />}>
+      <PeoplePageContent />
+    </Suspense>
   );
 }

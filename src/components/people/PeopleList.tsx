@@ -1,48 +1,85 @@
 'use client';
 
-import { Person } from '@/lib/api';
+import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { Search, X } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Input from '@/components/ui/Input';
+import { usePeople } from '@/hooks/useApi';
+import PeopleLoading from '@/app/people/loading';
 import PersonCard from './PersonCard';
 
-interface PeopleListProps {
-  people: Person[];
-  isLoading?: boolean;
-  onPersonClick?: (person: Person) => void;
-}
+export function PeopleList() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
 
-export default function PeopleList({ people, isLoading, onPersonClick }: PeopleListProps) {
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse" />
-        ))}
-      </div>
+  const { data: people = [], isLoading } = usePeople();
+
+  const filteredPeople = useMemo(() => {
+    if (!searchQuery.trim()) return people;
+    
+    const query = searchQuery.toLowerCase();
+    return people.filter(person =>
+      person.name.toLowerCase().includes(query) ||
+      person.relationship?.toLowerCase().includes(query) ||
+      person.notes?.toLowerCase().includes(query)
     );
+  }, [people, searchQuery]);
+
+  if (isLoading) {
+    return <PeopleLoading />;
   }
 
-  if (people.length === 0) {
+  if (filteredPeople.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-400 mb-4">
-          <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No people yet</h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">Start by adding someone to your list.</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-4">
+          No people found
+        </p>
+        <Button
+          onClick={() => router.push("/people/new")}
+        >
+          Add Your First Person
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      {people.map((person) => (
-        <PersonCard 
-          key={person.id} 
-          person={person} 
-          onClick={() => onPersonClick?.(person)}
-        />
-      ))}
-    </div>
+    <Card>
+      <div className="p-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Search people..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          {searchQuery && (
+            <Button
+              variant="secondary"
+              onClick={() => setSearchQuery('')}
+              className="flex items-center"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Clear Search
+            </Button>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          {filteredPeople.map((person) => (
+            <PersonCard key={person.id} person={person} onClick={() => router.push(`/people/${person.id}`)} />
+          ))}
+        </div>
+      </div>
+    </Card>
   );
 }

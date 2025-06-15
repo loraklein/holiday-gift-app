@@ -1,21 +1,27 @@
 "use client";
 
 import { useState } from 'react';
-import { toast } from 'react-hot-toast';
-import { useUpdateGiftIdea, usePeople, useEvents } from '@/hooks/useApi';
 import { GiftIdea } from '@/lib/api';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import { X } from 'lucide-react';
+import { usePeople, useEvents } from '@/hooks/useApi';
 
 interface EditGiftIdeaFormProps {
   giftIdea: GiftIdea;
-  onClose: () => void;
+  onSubmit: (data: Partial<GiftIdea>) => Promise<void>;
+  onCancel: () => void;
+  isSubmitting: boolean;
 }
 
-export default function EditGiftIdeaForm({ giftIdea, onClose }: EditGiftIdeaFormProps) {
+export default function EditGiftIdeaForm({ 
+  giftIdea, 
+  onSubmit, 
+  onCancel,
+  isSubmitting 
+}: EditGiftIdeaFormProps) {
   const [formData, setFormData] = useState({
     idea: giftIdea.idea,
     person_id: giftIdea.person_id,
@@ -28,7 +34,6 @@ export default function EditGiftIdeaForm({ giftIdea, onClose }: EditGiftIdeaForm
 
   const { data: people = [] } = usePeople();
   const { data: events = [] } = useEvents();
-  const updateGiftIdeaMutation = useUpdateGiftIdea();
 
   // Filter out invalid or past events, but include the current event if it exists
   const validEvents = events.filter(event => {
@@ -59,21 +64,10 @@ export default function EditGiftIdeaForm({ giftIdea, onClose }: EditGiftIdeaForm
     e.preventDefault();
     
     if (!formData.idea.trim()) {
-      toast.error('Please enter a gift idea');
       return;
     }
 
-    try {
-      await updateGiftIdeaMutation.mutateAsync({
-        id: giftIdea.id,
-        ...formData
-      });
-      toast.success('Gift idea updated successfully');
-      onClose();
-    } catch (error) {
-      toast.error('Failed to update gift idea');
-      console.error('Error updating gift idea:', error);
-    }
+    await onSubmit(formData);
   };
 
   return (
@@ -86,7 +80,7 @@ export default function EditGiftIdeaForm({ giftIdea, onClose }: EditGiftIdeaForm
             </h2>
             <Button
               variant="ghost"
-              onClick={onClose}
+              onClick={onCancel}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
               <X className="w-5 h-5" />
@@ -204,20 +198,21 @@ export default function EditGiftIdeaForm({ giftIdea, onClose }: EditGiftIdeaForm
               </select>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex justify-end gap-3">
               <Button
                 type="button"
-                variant="secondary"
-                onClick={onClose}
+                variant="ghost"
+                onClick={onCancel}
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="primary"
-                isLoading={updateGiftIdeaMutation.isPending}
+                disabled={isSubmitting}
               >
-                Save Changes
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
           </form>

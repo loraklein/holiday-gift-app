@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, Suspense, use } from 'react';
 import { toast } from 'react-hot-toast';
 import { useGiftIdea, usePatchGiftIdea, useDeleteGiftIdea, usePeople, useEvents } from '@/hooks/useApi';
 import { GiftIdea } from '@/lib/api';
@@ -10,36 +10,26 @@ import Button from '@/components/ui/Button';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import EditGiftIdeaForm from './EditGiftIdeaForm';
 import { ArrowLeft, Edit, Trash2, User, Calendar, Gift, DollarSign, Link as LinkIcon } from 'lucide-react';
-import { use } from 'react';
+import GiftIdeaLoading from '../loading';
 
 interface GiftIdeaDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function GiftIdeaDetailPage({ params }: GiftIdeaDetailPageProps) {
+function GiftIdeaDetailContent({ id }: { id: string }) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Unwrap the params promise
-  const { id } = use(params);
-
   // API hooks
-  const { data: giftIdea, isLoading, error } = useGiftIdea(parseInt(id));
+  const { data: giftIdea, error, isLoading } = useGiftIdea(parseInt(id));
   const { data: people = [] } = usePeople();
   const { data: events = [] } = useEvents();
   const patchGiftIdeaMutation = usePatchGiftIdea();
   const deleteGiftIdeaMutation = useDeleteGiftIdea();
 
   if (isLoading) {
-    return (
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        </div>
-      </div>
-    );
+    return <GiftIdeaLoading />;
   }
 
   if (error || !giftIdea) {
@@ -67,19 +57,6 @@ export default function GiftIdeaDetailPage({ params }: GiftIdeaDetailPageProps) 
   const person = people.find(p => p.id === giftIdea.person_id);
   const event = events.find(e => e.id === giftIdea.event_id);
 
-  const handleUpdateStatus = async (newStatus: GiftIdea['status']) => {
-    try {
-      await patchGiftIdeaMutation.mutateAsync({
-        id: giftIdea.id,
-        status: newStatus
-      });
-      toast.success(`Status updated to ${newStatus}`);
-    } catch (error) {
-      toast.error('Failed to update status');
-      console.error('Error updating status:', error);
-    }
-  };
-
   const handleDelete = async () => {
     try {
       await deleteGiftIdeaMutation.mutateAsync(giftIdea.id);
@@ -88,6 +65,17 @@ export default function GiftIdeaDetailPage({ params }: GiftIdeaDetailPageProps) 
     } catch (error) {
       toast.error('Failed to delete gift idea');
       console.error('Error deleting gift idea:', error);
+    }
+  };
+
+  const handleUpdate = async (data: Partial<GiftIdea>) => {
+    try {
+      await patchGiftIdeaMutation.mutateAsync({ id: giftIdea.id, ...data });
+      toast.success('Gift idea updated successfully');
+      setIsEditing(false);
+    } catch (error) {
+      toast.error('Failed to update gift idea');
+      console.error('Error updating gift idea:', error);
     }
   };
 
@@ -203,14 +191,14 @@ export default function GiftIdeaDetailPage({ params }: GiftIdeaDetailPageProps) 
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    URL
+                    Link
                   </dt>
                   <dd className="mt-1">
                     <a
                       href={giftIdea.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       {giftIdea.url}
                     </a>
@@ -221,82 +209,52 @@ export default function GiftIdeaDetailPage({ params }: GiftIdeaDetailPageProps) 
 
             {giftIdea.description && (
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center flex-shrink-0">
-                  <Gift className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-900/50 flex items-center justify-center flex-shrink-0">
+                  <Gift className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 </div>
-                <div className="flex-1">
+                <div>
                   <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Description
                   </dt>
-                  <dd className="mt-1 text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                  <dd className="mt-1 text-gray-900 dark:text-white">
                     {giftIdea.description}
                   </dd>
                 </div>
               </div>
             )}
           </div>
-
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Update Status
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={giftIdea.status === 'idea' ? 'primary' : 'ghost'}
-                onClick={() => handleUpdateStatus('idea')}
-                className={`${
-                  giftIdea.status === 'idea'
-                    ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                Idea
-              </Button>
-              <Button
-                variant={giftIdea.status === 'purchased' ? 'primary' : 'ghost'}
-                onClick={() => handleUpdateStatus('purchased')}
-                className={`${
-                  giftIdea.status === 'purchased'
-                    ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/50 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/70'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                Purchased
-              </Button>
-              <Button
-                variant={giftIdea.status === 'given' ? 'primary' : 'ghost'}
-                onClick={() => handleUpdateStatus('given')}
-                className={`${
-                  giftIdea.status === 'given'
-                    ? 'bg-green-100 text-green-900 dark:bg-green-900/50 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/70'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                Given
-              </Button>
-            </div>
-          </div>
         </div>
       </Card>
 
-      {isEditing && giftIdea && (
+      {isEditing && (
         <EditGiftIdeaForm
           giftIdea={giftIdea}
-          onClose={() => setIsEditing(false)}
+          onSubmit={handleUpdate}
+          onCancel={() => setIsEditing(false)}
+          isSubmitting={patchGiftIdeaMutation.isPending}
         />
       )}
 
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        title="Delete Gift Idea"
-        message={`Are you sure you want to delete "${giftIdea.idea}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmVariant="danger"
-        onConfirm={handleDelete}
-        onCancel={() => setShowDeleteConfirm(false)}
-        isLoading={deleteGiftIdeaMutation.isPending}
-      />
+      {showDeleteConfirm && (
+        <ConfirmDialog
+          title="Delete Gift Idea"
+          message="Are you sure you want to delete this gift idea? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+          isOpen={showDeleteConfirm}
+        />
+      )}
     </div>
+  );
+}
+
+export default function GiftIdeaDetailPage({ params }: GiftIdeaDetailPageProps) {
+  const resolvedParams = use(params);
+  return (
+    <Suspense fallback={<GiftIdeaLoading />}>
+      <GiftIdeaDetailContent id={resolvedParams.id} />
+    </Suspense>
   );
 } 

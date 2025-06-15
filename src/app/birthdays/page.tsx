@@ -1,18 +1,23 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { usePeople } from '@/hooks/useApi';
 import { format, addYears, isToday } from 'date-fns';
 import { Calendar, Gift, Car, List, X } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
+import BirthdaysLoading from './loading';
 
-export default function BirthdaysPage() {
+function BirthdaysPageContent() {
   const router = useRouter();
-  const { data: people = [] } = usePeople();
+  const { data: people = [], isLoading } = usePeople();
   const [view, setView] = useState<'upcoming' | 'calendar'>('upcoming');
   const [showComingSoon, setShowComingSoon] = useState(false);
+
+  if (isLoading) {
+    return <BirthdaysLoading />;
+  }
 
   // Get all people with birthdays
   const peopleWithBirthdays = people.filter(person => person.birthday);
@@ -48,10 +53,12 @@ export default function BirthdaysPage() {
   }, {} as Record<string, typeof sortedBirthdays>);
 
   return (
-    <div className="space-y-6 p-4">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Birthdays</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Birthdays
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {peopleWithBirthdays.length} people with birthdays
           </p>
@@ -203,5 +210,13 @@ export default function BirthdaysPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function BirthdaysPage() {
+  return (
+    <Suspense fallback={<BirthdaysLoading />}>
+      <BirthdaysPageContent />
+    </Suspense>
   );
 } 

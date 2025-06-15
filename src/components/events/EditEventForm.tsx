@@ -24,13 +24,17 @@ export default function EditEventForm({ event, onSubmit, onCancel, isSubmitting 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.date || !formData.event_type) return;
-    onSubmit(event.id, {
+    
+    const eventData: Partial<Event> = {
       name: formData.name.trim(),
       event_date: formData.date,
       description: formData.description.trim() || undefined,
       event_type: formData.event_type,
       recurring: formData.recurring,
-    });
+    };
+
+    console.log('Form submitting event data:', eventData);
+    onSubmit(event.id, eventData);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
