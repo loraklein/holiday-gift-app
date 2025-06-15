@@ -145,7 +145,9 @@ export function useGiftIdeas() {
   return useQuery({
     queryKey: queryKeys.giftIdeas,
     queryFn: async () => {
-      return api.getGiftIdeas();
+      const giftIdeas = await api.getGiftIdeas();
+      // Sort by id in descending order (newest first)
+      return giftIdeas.sort((a, b) => b.id - a.id);
     },
   });
 }
