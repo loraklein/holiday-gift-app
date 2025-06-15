@@ -23,7 +23,6 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   // Unwrap the params promise
   const { id } = use(params);
@@ -31,7 +30,7 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
 
   // API hooks
   const { data: person, isLoading, error } = usePerson(parseInt(id), {
-    enabled: !isDeleting && !isUpdating // Disable the query when deletion or update is in progress
+    enabled: !isDeleting // Disable the query when deletion is in progress
   });
   const { data: giftIdeas = [], isLoading: isLoadingGiftIdeas } = useGiftIdeasByPerson(parseInt(id));
   
@@ -102,20 +101,14 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
 
   console.log('Rendering person details:', person);
 
-  const handleUpdatePerson = async (updatedPerson: Partial<Person>) => {
+  const handleUpdatePerson = async (personId: number, updatedPerson: Partial<Person>) => {
     try {
-      setIsUpdating(true); // Disable the person query
-      const result = await updatePersonMutation.mutateAsync({ id: person.id, ...updatedPerson });
-      console.log('Update result:', result);
+      await updatePersonMutation.mutateAsync({ id: personId, ...updatedPerson });
+      toast.success('Person updated successfully');
       setIsEditing(false);
-      toast.success('Person updated successfully!');
-      // Force a refresh of the person data
-      router.refresh();
     } catch (error) {
-      console.error('Error updating person:', error);
-      toast.error('Failed to update person. Please try again.');
-    } finally {
-      setIsUpdating(false); // Re-enable the query
+      console.error('Failed to update person:', error);
+      toast.error('Failed to update person');
     }
   };
 
