@@ -9,8 +9,17 @@ import Layout from '@/components/layout/Layout';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Holiday Gift Planner',
-  description: 'Plan and track holiday gifts for family and friends',
+  title: 'Holiday Gift App',
+  description: 'Keep track of gift ideas for your loved ones',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-icon.png' },
+    ],
+  },
 };
 
 export default function RootLayout({
