@@ -1,23 +1,12 @@
 "use client";
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEvents } from '@/hooks/useApi';
 import { Plus } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { EventsList } from '@/components/events/EventsList';
 
 export default function EventsPage() {
   const router = useRouter();
-  const [searchQuery] = useState('');
-  const [showPastEvents] = useState(false);
-  const { data: events = [] } = useEvents();
-
-  const filteredEvents = events.filter(event => {
-    const matchesSearch = event.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const isPast = new Date(event.event_date) < new Date();
-    return matchesSearch && (showPastEvents || !isPast);
-  });
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
@@ -34,7 +23,7 @@ export default function EventsPage() {
         </Button>
       </div>
 
-      <EventsList events={filteredEvents} />
+      <EventsList />
     </div>
   );
 }
