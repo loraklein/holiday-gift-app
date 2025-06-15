@@ -3,23 +3,29 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
-import { useGiftIdeas } from '@/hooks/useApi';
+import { useGiftIdeas, usePatchGiftIdea } from '@/hooks/useApi';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
 import GiftIdeaCard from './GiftIdeaCard';
 import GiftIdeasLoading from '@/app/gift-ideas/loading';
+import { GiftIdea } from '@/lib/api';
 
 export default function GiftIdeasList() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const { data: giftIdeas = [], isLoading } = useGiftIdeas();
+  const patchGiftIdeaMutation = usePatchGiftIdea();
 
-  const filteredGiftIdeas = giftIdeas.filter(giftIdea =>
+  const filteredGiftIdeas = giftIdeas.filter((giftIdea: GiftIdea) =>
     giftIdea.idea.toLowerCase().includes(searchQuery.toLowerCase()) ||
     giftIdea.person_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     giftIdea.event_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleStatusUpdate = async (id: number, status: 'idea' | 'purchased' | 'given') => {
+    return patchGiftIdeaMutation.mutateAsync({ id, status });
+  };
 
   if (isLoading) {
     return <GiftIdeasLoading />;
@@ -58,12 +64,14 @@ export default function GiftIdeasList() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredGiftIdeas.map((giftIdea) => (
-            <GiftIdeaCard
-              key={giftIdea.id}
-              giftIdea={giftIdea}
-            />
+        <div className="space-y-4">
+          {filteredGiftIdeas.map((giftIdea: GiftIdea) => (
+            <div key={giftIdea.id}>
+              <GiftIdeaCard
+                giftIdea={giftIdea}
+                onStatusUpdate={handleStatusUpdate}
+              />
+            </div>
           ))}
         </div>
       </div>

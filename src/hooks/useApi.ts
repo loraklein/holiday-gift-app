@@ -1,27 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, Person, Event, GiftIdea } from '@/lib/api';
+import { api } from '@/lib/api';
+import { Person, Event, GiftIdea } from '@/lib/api';
 
-// Add this at the top of the file
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Query keys for consistent caching
-export const queryKeys = {
-  people: ['people'] as const,
-  person: (id: number) => ['people', id] as const,
-  events: ['events'] as const,
-  event: (id: number) => ['events', id] as const,
-  giftIdeas: ['gift-ideas'] as const,
-  giftIdea: (id: number) => ['gift-ideas', id] as const,
-  giftIdeasByPerson: (personId: number) => ['people', personId, 'gift-ideas'] as const,
-  dashboardStats: ['dashboard', 'stats'] as const,
-};
+const queryKeys = {
+  people: ['people'],
+  person: (id: number) => ['person', id],
+  events: ['events'],
+  event: (id: number) => ['event', id],
+  giftIdeas: ['giftIdeas'],
+  giftIdea: (id: number) => ['giftIdea', id],
+  dashboard: ['dashboard'],
+  dashboardStats: ['dashboardStats']
+} as const;
 
 // People hooks
 export function usePeople() {
   return useQuery({
     queryKey: queryKeys.people,
     queryFn: async () => {
-      await delay(2000); // 2 second delay
       return api.getPeople();
     },
   });
@@ -31,7 +27,6 @@ export function usePerson(id: number, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.person(id),
     queryFn: async () => {
-      await delay(2000); // 2 second delay
       return api.getPerson(id);
     },
     enabled: options?.enabled !== false && !!id,
@@ -43,7 +38,6 @@ export function useCreatePerson() {
   
   return useMutation({
     mutationFn: async (person: Omit<Person, 'id' | 'created_at' | 'updated_at'>) => {
-      await delay(2000); // 2 second delay
       return api.createPerson(person);
     },
     onSuccess: () => {
@@ -58,10 +52,9 @@ export function useUpdatePerson() {
   
   return useMutation({
     mutationFn: async ({ id, ...person }: { id: number } & Partial<Person>) => {
-      await delay(2000); // 2 second delay
       return api.updatePerson(id, person);
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.people });
       queryClient.invalidateQueries({ queryKey: queryKeys.person(variables.id) });
     },
@@ -73,7 +66,6 @@ export function useDeletePerson() {
   
   return useMutation({
     mutationFn: async (id: number) => {
-      await delay(2000); // 2 second delay
       return api.deletePerson(id);
     },
     onSuccess: (_, id) => {
@@ -91,7 +83,6 @@ export function useEvents() {
   return useQuery({
     queryKey: queryKeys.events,
     queryFn: async () => {
-      await delay(2000); // 2 second delay
       return api.getEvents();
     },
   });
@@ -101,7 +92,6 @@ export function useEvent(id: number) {
   return useQuery({
     queryKey: queryKeys.event(id),
     queryFn: async () => {
-      await delay(2000); // 2 second delay
       return api.getEvent(id);
     },
     enabled: !!id,
@@ -113,7 +103,6 @@ export function useCreateEvent() {
   
   return useMutation({
     mutationFn: async (event: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => {
-      await delay(2000); // 2 second delay
       return api.createEvent(event);
     },
     onSuccess: () => {
@@ -128,10 +117,9 @@ export function useUpdateEvent() {
   
   return useMutation({
     mutationFn: async ({ id, ...event }: { id: number } & Partial<Event>) => {
-      await delay(2000); // 2 second delay
       return api.updateEvent(id, event);
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.events });
       queryClient.invalidateQueries({ queryKey: queryKeys.event(variables.id) });
     },
@@ -143,7 +131,6 @@ export function useDeleteEvent() {
   
   return useMutation({
     mutationFn: async (id: number) => {
-      await delay(2000); // 2 second delay
       return api.deleteEvent(id);
     },
     onSuccess: () => {
@@ -154,28 +141,26 @@ export function useDeleteEvent() {
 }
 
 // Gift Ideas hooks
-export const useGiftIdeas = () => {
+export function useGiftIdeas() {
   return useQuery({
-    queryKey: ['giftIdeas'],
+    queryKey: queryKeys.giftIdeas,
     queryFn: async () => {
-      await delay(2000); // 2 second delay
       return api.getGiftIdeas();
     },
   });
-};
+}
 
-export const useGiftIdea = (id: number) => {
+export function useGiftIdea(id: number) {
   return useQuery({
-    queryKey: ['giftIdea', id],
+    queryKey: queryKeys.giftIdea(id),
     queryFn: async () => {
-      await delay(2000); // 2 second delay
       return api.getGiftIdea(id);
     },
     enabled: !!id,
   });
-};
+}
 
-export const useGiftIdeasByPerson = (personId: number) => {
+export function useGiftIdeasByPerson(personId: number) {
   const { data: allGiftIdeas = [] } = useGiftIdeas();
   
   return {
@@ -183,65 +168,64 @@ export const useGiftIdeasByPerson = (personId: number) => {
     isLoading: false,
     error: null
   };
-};
+}
 
-export const useCreateGiftIdea = () => {
+export function useCreateGiftIdea() {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async (giftIdea: Omit<GiftIdea, 'id' | 'created_at' | 'updated_at'>) => {
-      await delay(2000); // 2 second delay
       return api.createGiftIdea(giftIdea);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['giftIdeas'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.giftIdeas });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
   });
-};
+}
 
-export const useUpdateGiftIdea = () => {
+export function useUpdateGiftIdea() {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async ({ id, ...giftIdea }: { id: number } & Partial<GiftIdea>) => {
-      await delay(2000); // 2 second delay
       return api.updateGiftIdea(id, giftIdea);
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['giftIdeas'] });
-      queryClient.invalidateQueries({ queryKey: ['giftIdea', variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.giftIdeas });
+      queryClient.invalidateQueries({ queryKey: queryKeys.giftIdea(variables.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
   });
-};
+}
 
-export const usePatchGiftIdea = () => {
+export function usePatchGiftIdea() {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async ({ id, ...giftIdea }: { id: number } & Partial<GiftIdea>) => {
-      await delay(2000); // 2 second delay
       return api.patchGiftIdea(id, giftIdea);
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['giftIdeas'] });
-      queryClient.invalidateQueries({ queryKey: ['giftIdea', variables.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.giftIdeas });
+      queryClient.invalidateQueries({ queryKey: queryKeys.giftIdea(variables.id) });
     },
   });
-};
+}
 
-export const useDeleteGiftIdea = () => {
+export function useDeleteGiftIdea() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: number) => api.deleteGiftIdea(id),
+    mutationFn: async (id: number) => {
+      return api.deleteGiftIdea(id);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['giftIdeas'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.giftIdeas });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
   });
-};
+}
 
 // Dashboard hooks
 export function useDashboardStats() {
