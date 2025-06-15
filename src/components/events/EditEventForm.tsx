@@ -4,6 +4,8 @@ import { Event } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 interface EditEventFormProps {
   event: Event;
@@ -15,7 +17,7 @@ interface EditEventFormProps {
 export default function EditEventForm({ event, onSubmit, onCancel, isSubmitting }: EditEventFormProps) {
   const [formData, setFormData] = useState({
     name: event.name || '',
-    date: event.event_date ? new Date(event.event_date).toISOString().split('T')[0] : '',
+    date: event.event_date ? new Date(event.event_date) : new Date(),
     description: event.description || '',
     event_type: event.event_type || '',
     recurring: event.recurring !== undefined ? event.recurring : true,
@@ -27,7 +29,7 @@ export default function EditEventForm({ event, onSubmit, onCancel, isSubmitting 
     
     const eventData: Partial<Event> = {
       name: formData.name.trim(),
-      event_date: formData.date,
+      event_date: formData.date.toISOString().split('T')[0],
       description: formData.description.trim() || undefined,
       event_type: formData.event_type,
       recurring: formData.recurring,
@@ -95,13 +97,11 @@ export default function EditEventForm({ event, onSubmit, onCancel, isSubmitting 
             <label htmlFor="edit-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Date *
             </label>
-            <Input
-              type="date"
-              id="edit-date"
-              name="date"
-              value={formData.date}
-              onChange={handleInputChange}
-              required
+            <DatePicker
+              selected={formData.date}
+              onChange={(date: Date | null) => date && setFormData(prev => ({ ...prev, date }))}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              dateFormat="MMMM d, yyyy"
               disabled={isSubmitting}
             />
           </div>
@@ -119,26 +119,12 @@ export default function EditEventForm({ event, onSubmit, onCancel, isSubmitting 
               required
               disabled={isSubmitting}
             >
-              <option value="">Select type</option>
+              <option value="">Select a type</option>
               <option value="holiday">Holiday</option>
+              <option value="birthday">Birthday</option>
               <option value="anniversary">Anniversary</option>
               <option value="special_occasion">Special Occasion</option>
             </select>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="edit-recurring"
-              name="recurring"
-              checked={formData.recurring}
-              onChange={handleInputChange}
-              disabled={isSubmitting}
-              className="mr-2"
-            />
-            <label htmlFor="edit-recurring" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Recurring
-            </label>
           </div>
 
           <div>
@@ -150,10 +136,24 @@ export default function EditEventForm({ event, onSubmit, onCancel, isSubmitting 
               name="description"
               value={formData.description}
               onChange={handleTextareaChange}
-              rows={3}
-              placeholder="Any additional notes..."
+              placeholder="Enter event description"
               disabled={isSubmitting}
             />
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="edit-recurring"
+              name="recurring"
+              checked={formData.recurring}
+              onChange={handleInputChange}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              disabled={isSubmitting}
+            />
+            <label htmlFor="edit-recurring" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+              Recurring Event
+            </label>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

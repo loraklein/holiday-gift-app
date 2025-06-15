@@ -6,9 +6,11 @@ import { Person } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 interface AddPersonFormProps {
-  onSubmit: (personData: Partial<Person>) => Promise<void>;
+  onSubmit: (personData: Omit<Person, 'id' | 'created_at' | 'updated_at'>) => void;
   onCancel: () => void;
   isSubmitting: boolean;
 }
@@ -17,40 +19,36 @@ export default function AddPersonForm({ onSubmit, onCancel, isSubmitting }: AddP
   const [formData, setFormData] = useState({
     name: '',
     relationship: '',
-    birthday: '',
-    notes: ''
+    birthday: null as Date | null,
+    notes: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
-
-    onSubmit({
+    
+    const personData: Omit<Person, 'id' | 'created_at' | 'updated_at'> = {
       name: formData.name.trim(),
-      relationship: formData.relationship || undefined,
-      birthday: formData.birthday || undefined,
+      relationship: formData.relationship.trim() || undefined,
+      birthday: formData.birthday ? formData.birthday.toISOString().split('T')[0] : undefined,
       notes: formData.notes.trim() || undefined,
-    });
+    };
+
+    onSubmit(personData);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
-    }));
-  };
-
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
+      [name]: value,
     }));
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
@@ -58,7 +56,7 @@ export default function AddPersonForm({ onSubmit, onCancel, isSubmitting }: AddP
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add New Person</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add Person</h2>
           <button
             onClick={onCancel}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -79,7 +77,7 @@ export default function AddPersonForm({ onSubmit, onCancel, isSubmitting }: AddP
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              placeholder="Enter person's name"
+              placeholder="Enter name"
               required
               disabled={isSubmitting}
             />
@@ -89,32 +87,28 @@ export default function AddPersonForm({ onSubmit, onCancel, isSubmitting }: AddP
             <label htmlFor="relationship" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Relationship
             </label>
-            <select
+            <Input
+              type="text"
               id="relationship"
               name="relationship"
               value={formData.relationship}
-              onChange={handleSelectChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              onChange={handleInputChange}
+              placeholder="Enter relationship"
               disabled={isSubmitting}
-            >
-              <option value="">Select relationship</option>
-              <option value="family">Family</option>
-              <option value="friend">Friend</option>
-              <option value="coworker">Coworker</option>
-              <option value="other">Other</option>
-            </select>
+            />
           </div>
 
           <div>
             <label htmlFor="birthday" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Birthday
             </label>
-            <Input
-              type="date"
-              id="birthday"
-              name="birthday"
-              value={formData.birthday}
-              onChange={handleInputChange}
+            <DatePicker
+              selected={formData.birthday}
+              onChange={(date: Date | null) => setFormData(prev => ({ ...prev, birthday: date }))}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              dateFormat="MMMM d, yyyy"
+              placeholderText="Select birthday"
+              isClearable
               disabled={isSubmitting}
             />
           </div>
@@ -128,8 +122,7 @@ export default function AddPersonForm({ onSubmit, onCancel, isSubmitting }: AddP
               name="notes"
               value={formData.notes}
               onChange={handleTextareaChange}
-              rows={3}
-              placeholder="Any additional notes..."
+              placeholder="Enter any additional notes"
               disabled={isSubmitting}
             />
           </div>

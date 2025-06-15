@@ -4,6 +4,8 @@ import { Event } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 interface AddEventFormProps {
   onSubmit: (eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => void;
@@ -14,7 +16,7 @@ interface AddEventFormProps {
 export default function AddEventForm({ onSubmit, onCancel, isSubmitting }: AddEventFormProps) {
   const [formData, setFormData] = useState({
     name: '',
-    date: '',
+    date: new Date(),
     description: '',
     event_type: '',
     recurring: true,
@@ -32,13 +34,14 @@ export default function AddEventForm({ onSubmit, onCancel, isSubmitting }: AddEv
       return;
     }
     setError(null);
-    onSubmit({
+    const eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'> = {
       name: formData.name.trim(),
-      event_date: formData.date,
+      event_date: formData.date.toISOString().split('T')[0],
       description: formData.description.trim() || undefined,
       event_type: formData.event_type,
       recurring: formData.recurring,
-    });
+    };
+    onSubmit(eventData);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,13 +108,11 @@ export default function AddEventForm({ onSubmit, onCancel, isSubmitting }: AddEv
             <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Date *
             </label>
-            <Input
-              type="date"
-              id="date"
-              name="date"
-              value={formData.date}
-              onChange={handleInputChange}
-              required
+            <DatePicker
+              selected={formData.date}
+              onChange={(date: Date | null) => date && setFormData(prev => ({ ...prev, date }))}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              dateFormat="MMMM d, yyyy"
               disabled={isSubmitting}
             />
           </div>
@@ -143,10 +144,10 @@ export default function AddEventForm({ onSubmit, onCancel, isSubmitting }: AddEv
               name="recurring"
               checked={formData.recurring}
               onChange={handleInputChange}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               disabled={isSubmitting}
-              className="mr-2"
             />
-            <label htmlFor="recurring" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="recurring" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
               Recurring
             </label>
           </div>

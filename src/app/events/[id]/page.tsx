@@ -81,13 +81,13 @@ export default function EventDetailPage() {
         ← Back to Events
       </Link>
       <div className="flex items-center gap-3 mt-4">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           {event.name}
           {getEventTypeIcon(event)}
           {event.recurring && <RefreshCw size={18} className="text-blue-400 ml-2" />}
         </h1>
       </div>
-      <div className="flex items-center gap-2 text-gray-600">
+      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
         <Calendar size={18} />
         {new Date(event.event_date).toLocaleDateString("en-US", { 
           month: "long", 
@@ -95,16 +95,16 @@ export default function EventDetailPage() {
           year: "numeric" 
         })}
       </div>
-      <div className="text-gray-700">
+      <div className="text-gray-700 dark:text-gray-200">
         <span className="font-semibold">Type:</span> {event.event_type || 'Not specified'}
       </div>
       {event.description && (
-        <div className="text-gray-700">
+        <div className="text-gray-700 dark:text-gray-200">
           <span className="font-semibold">Description:</span> {event.description}
         </div>
       )}
       {event.recurring && (
-        <div className="text-gray-700">
+        <div className="text-gray-700 dark:text-gray-200">
           <span className="font-semibold">Recurring:</span> Yes
         </div>
       )}
