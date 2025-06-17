@@ -56,17 +56,25 @@ The application uses several powerful npm packages to enhance functionality:
    - Purpose: Icon library
    - Used for: Consistent and customizable icons throughout the app
 
-9. **react-hook-form** (v7.57.0)
-   - Purpose: Form handling and validation
-   - Used for: All form inputs and data submission
+9. **react-datepicker** (v8.4.0)
+   - Purpose: Date picker component
+   - Used for: Selecting dates in forms (birthdays, events)
 
-10. **react-hot-toast** (v2.5.2)
+10. **react-hook-form** (v7.57.0)
+    - Purpose: Form handling and validation
+    - Used for: All form inputs and data submission
+
+11. **react-hot-toast** (v2.5.2)
     - Purpose: Toast notifications
     - Used for: User feedback and error messages
 
-11. **tailwind-merge** (v3.3.1)
+12. **tailwind-merge** (v3.3.1)
     - Purpose: Utility for merging Tailwind CSS classes
     - Used for: Resolving class conflicts and dynamic styling
+
+13. **tailwindcss** (v4)
+    - Purpose: Utility-first CSS framework
+    - Used for: Styling and responsive design
 
 ## API Documentation
 
