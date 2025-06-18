@@ -6,48 +6,37 @@ import { Search } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
-import { useEvents } from '@/hooks/useApi';
+import { useEvents, useDeleteEvent } from '@/hooks/useApi';
+import { useEventUtils } from '@/hooks/useEventUtils';
 import EventsLoading from '@/app/events/loading';
 import EventCard from './EventCard';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { toast } from 'react-hot-toast';
 
-export function EventsList() {
+interface EventsListProps {
+  showPastEvents: boolean;
+  onShowPastEventsChange: (show: boolean) => void;
+}
+
+export function EventsList({ showPastEvents, onShowPastEventsChange }: EventsListProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [showPastEvents, setShowPastEvents] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<number | null>(null);
+  const { getNextEventDate } = useEventUtils();
 
   const { data: events = [], isLoading } = useEvents();
+  const deleteEventMutation = useDeleteEvent();
 
-  function getNextOccurrence(dateStr: string, recurring: boolean = true) {
-    if (!dateStr) return new Date(8640000000000000); // far future for invalid dates
-    
+  const handleDelete = async (id: number) => {
     try {
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) {
-        return new Date(8640000000000000); // far future for invalid dates
-      }
-      
-      const today = new Date();
-      const thisYear = today.getFullYear();
-      let next = new Date(date);
-      next.setFullYear(thisYear);
-      
-      // If the event already happened this year, set to next year (only if recurring)
-      if (
-        next.getMonth() < today.getMonth() ||
-        (next.getMonth() === today.getMonth() && next.getDate() < today.getDate())
-      ) {
-        if (recurring) {
-          next.setFullYear(thisYear + 1);
-        } else {
-          // For non-recurring, set to far future so it sorts last and can be filtered out
-          next = new Date(8640000000000000);
-        }
-      }
-      return next;
-    } catch {
-      return new Date(8640000000000000); // far future for invalid dates
+      await deleteEventMutation.mutateAsync(id);
+      toast.success('Event deleted successfully');
+      setEventToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+      toast.error('Failed to delete event');
     }
-  }
+  };
 
   const filteredEvents = useMemo(() => {
     let result = events;
@@ -82,7 +71,9 @@ export function EventsList() {
       
       // For recurring events, determine if they're upcoming or past based on next occurrence
       if (event.recurring !== false) {
-        const nextOccurrence = getNextOccurrence(event.event_date, true);
+        const nextOccurrence = getNextEventDate(event);
+        if (!nextOccurrence) return false;
+        
         if (showPastEvents) {
           // For past events view, show recurring events that have already occurred
           return nextOccurrence < today;
@@ -102,11 +93,11 @@ export function EventsList() {
     
     // Sort by next occurrence
     return result.slice().sort((a, b) => {
-      const aNext = getNextOccurrence(a.event_date, a.recurring !== false);
-      const bNext = getNextOccurrence(b.event_date, b.recurring !== false);
+      const aNext = getNextEventDate(a) || new Date(8640000000000000);
+      const bNext = getNextEventDate(b) || new Date(8640000000000000);
       return showPastEvents ? bNext.getTime() - aNext.getTime() : aNext.getTime() - bNext.getTime();
     });
-  }, [events, searchQuery, showPastEvents]);
+  }, [events, searchQuery, showPastEvents, getNextEventDate]);
 
   if (isLoading) {
     return <EventsLoading />;
@@ -149,7 +140,7 @@ export function EventsList() {
                 type="checkbox"
                 className="sr-only peer"
                 checked={showPastEvents}
-                onChange={() => setShowPastEvents(!showPastEvents)}
+                onChange={() => onShowPastEventsChange(!showPastEvents)}
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
               <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
@@ -161,7 +152,7 @@ export function EventsList() {
                 variant="secondary"
                 onClick={() => {
                   setSearchQuery('');
-                  setShowPastEvents(false);
+                  onShowPastEventsChange(false);
                 }}
                 className={`whitespace-nowrap transition-opacity duration-200 ${
                   searchQuery || showPastEvents ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -178,15 +169,22 @@ export function EventsList() {
             <EventCard
               key={event.id}
               event={event}
-              onEdit={(event) => router.push(`/events/${event.id}/edit`)}
-              onDelete={(id) => {
-                // Handle delete in the parent component
-                console.log('Delete event:', id);
-              }}
             />
           ))}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={eventToDelete !== null}
+        title="Delete Event"
+        message="Are you sure you want to delete this event? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        onConfirm={() => eventToDelete && handleDelete(eventToDelete)}
+        onCancel={() => setEventToDelete(null)}
+        isLoading={deleteEventMutation.isPending}
+      />
     </Card>
   );
 } 

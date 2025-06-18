@@ -18,6 +18,7 @@ export interface Event {
   description?: string;
   event_type?: string;
   recurring?: boolean;
+  recurrence_pattern?: string;
   created_at?: string;
   updated_at?: string;
 }

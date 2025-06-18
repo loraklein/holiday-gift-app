@@ -29,27 +29,50 @@ function GiftIdeaDetailContent({ id }: { id: string }) {
   const deleteGiftIdeaMutation = useDeleteGiftIdea();
 
   if (isLoading) {
-    return <GiftIdeaLoading />;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="p-2"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="h-8 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+        </div>
+        <div className="h-64 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+      </div>
+    );
   }
 
   if (error || !giftIdea) {
     return (
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Error Loading Gift Idea
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {error ? 'Failed to load gift idea. Please try again.' : 'Gift idea not found.'}
-          </p>
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
           <Button
-            variant="primary"
+            variant="ghost"
             onClick={() => router.back()}
+            className="p-2"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Go Back
+            <ArrowLeft className="h-5 w-5" />
           </Button>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Error</h1>
         </div>
+        <Card>
+          <div className="p-6 text-center">
+            <p className="text-gray-600 dark:text-gray-400">
+              {error ? 'Failed to load gift idea details.' : 'Gift idea not found.'}
+            </p>
+            <Button
+              variant="primary"
+              onClick={() => router.back()}
+              className="mt-4"
+            >
+              Go Back
+            </Button>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -80,36 +103,35 @@ function GiftIdeaDetailContent({ id }: { id: string }) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="mb-6">
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="p-2"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Gift Idea Details
+            {giftIdea.idea}
           </h1>
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => setIsEditing(true)}
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </Button>
-          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => setIsEditing(true)}
+            className="p-2"
+          >
+            <Edit className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+          >
+            <Trash2 className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
