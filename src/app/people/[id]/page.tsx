@@ -23,12 +23,9 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // Unwrap the params promise
   const { id } = use(params);
   console.log('Person ID:', id);
 
-  // API hooks
   const { data: person, isLoading, error } = usePerson(parseInt(id), {
     enabled: !isDeleting // Disable the query when deletion is in progress
   });
@@ -246,7 +243,7 @@ export default function PersonDetailPage({ params }: PersonDetailPageProps) {
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => router.push(`/gift-ideas/new?personId=${person.id}`)}
+                  onClick={() => router.push(`/gift-ideas/new?person_id=${person.id}&return_to=/people/${person.id}`)}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Gift Idea
